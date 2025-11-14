@@ -488,7 +488,7 @@
 
     const DEFAULT_ACTIVITIES = [
       'Credenciamento','Descredenciamento','1ª Venda (KYC)','Movimentações',
-      'Investigações','Recebíveis','Disputa','Chargeback','Recuperação','Cobrança',
+      'Investigações','Recebiveis','Recebíveis','Disputa','Chargeback','Recuperação','Cobrança',
       'Processo de Análise','Monitoramentos','Alertas POS','Recebíveis (Fraude)',
       'Estruturas de dados','Modelagens e automações de processos'
     ];
@@ -511,19 +511,7 @@
       if(changed) writeSubs(subs);
     }
 
-    if(!readDB().length){
-      writeDB([{
-        id:uuid(),
-        topicId:'credenciamento',
-        title:'Validação credenciamento',
-        author:'vitoria', role:'Jovem aprendiz',
-        updated:nowFmt(),
-        steps:[
-          {title:'Passo 1',desc:'<p>Início do processo.</p>',imgUrl:'https://i.imgur.com/4xB8n6M.png',links:[]},
-          {title:'Passo 2',desc:'<p>Validações principais.</p>',imgUrl:'https://i.imgur.com/0wC4d8P.png',links:[]}
-        ]
-      }]);
-    }
+    // Removido o bloco que recriava guia padrão quando o DB estava vazio
     cleanupOrphanSubtitles();
 
     let currentTopic='credenciamento';
@@ -640,7 +628,6 @@
     btnAddSubRow.onclick=function(){addSubRow();};
     btnCloseSub.onclick=function(){openModal(subModal,false);};
 
-    // <-- AQUI ESTÁ A CORREÇÃO DO ATALHO "S"
     document.addEventListener('keydown', function(e) {
       const tag = e.target.tagName.toLowerCase();
       const isTypingElement =
@@ -649,10 +636,8 @@
         tag === 'select' ||
         e.target.isContentEditable;
 
-      // se estiver digitando em algum campo, deixa o "s" funcionar normal
       if (isTypingElement) return;
 
-      // atalho: tecla S sozinha abre o editor de subtítulos
       if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         openSubEditor();
@@ -902,7 +887,6 @@
       const btnAdd = $('#absAddAct');
       const btnManage = $('#absManageAct');
 
-      // Modal Gerenciador
       const actModal = $('#actModal');
       const actList = $('#actList');
       const closeAct = $('#closeAct');
@@ -1019,7 +1003,6 @@
         renderList();
       };
 
-      /* ====== Gerenciador de Atividades ====== */
       function openActManager(){
         const allActs = readActs();
         const defaults = new Set(DEFAULT_ACTIVITIES);
@@ -1044,20 +1027,18 @@
               if(exists){ alert('Já existe uma atividade com esse nome.'); return; }
               const idx = currentSaved.indexOf(act);
               if(idx>=0){ currentSaved[idx]=newName; writeActs(currentSaved); }
-              // Atualiza registros existentes (renomeia)
               const regs = readAbs().map(r=>{
                 const arr = (r.activities||[]).map(a=> a===act ? newName : a );
                 return {...r, activities: arr};
               });
               writeAbs(regs);
               renderActs(); renderList();
-              openActManager(); // re-render modal
+              openActManager();
             };
             row.querySelector('[data-del]').onclick = ()=>{
               if(!confirm('Remover esta atividade? Ela também será removida dos registros.')) return;
               const currentSaved = getSavedActs().filter(a=>a!==act);
               writeActs(currentSaved);
-              // Remove dos registros
               const regs = readAbs().map(r=>{
                 const arr = (r.activities||[]).filter(a=> a!==act );
                 return {...r, activities: arr};
