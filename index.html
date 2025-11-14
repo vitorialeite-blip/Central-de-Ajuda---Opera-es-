@@ -639,7 +639,25 @@
     }
     btnAddSubRow.onclick=function(){addSubRow();};
     btnCloseSub.onclick=function(){openModal(subModal,false);};
-    document.addEventListener('keydown',function(e){ if(e.key.toLowerCase()==='s' && !e.ctrlKey && !e.metaKey){ e.preventDefault(); openSubEditor(); }});
+
+    // <-- AQUI ESTÁ A CORREÇÃO DO ATALHO "S"
+    document.addEventListener('keydown', function(e) {
+      const tag = e.target.tagName.toLowerCase();
+      const isTypingElement =
+        tag === 'input' ||
+        tag === 'textarea' ||
+        tag === 'select' ||
+        e.target.isContentEditable;
+
+      // se estiver digitando em algum campo, deixa o "s" funcionar normal
+      if (isTypingElement) return;
+
+      // atalho: tecla S sozinha abre o editor de subtítulos
+      if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        openSubEditor();
+      }
+    });
 
     subForm.onsubmit=function(e){
       e.preventDefault();
