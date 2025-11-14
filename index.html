@@ -511,7 +511,7 @@
       if(changed) writeSubs(subs);
     }
 
-    // Removido o bloco que recriava guia padrão quando o DB estava vazio
+    // NÃO recria guia padrão automaticamente
     cleanupOrphanSubtitles();
 
     let currentTopic='credenciamento';
@@ -628,6 +628,7 @@
     btnAddSubRow.onclick=function(){addSubRow();};
     btnCloseSub.onclick=function(){openModal(subModal,false);};
 
+    // Atalho S sem atrapalhar quando estiver digitando
     document.addEventListener('keydown', function(e) {
       const tag = e.target.tagName.toLowerCase();
       const isTypingElement =
@@ -1063,11 +1064,82 @@
     /* ===== Busca / Favoritos ===== */
     function search(q){
       q=q.trim().toLowerCase();
-      const out=[]; Object.entries(TOPICS).forEach(function([id,t]){ if((t.title||'').toLowerCase().includes(q)||(t.desc||'').toLowerCase().includes(q)){ out.push({type:'topic',id:id,title:t.title,desc:t.desc}); } });
-      readDB().forEach(function(g){ if(g.title.toLowerCase().includes(q)){ out.push({type:'guide',id:g.id,topicId:g.topicId,title:g.title,desc:'Guia em '+(TOPICS[g.topicId]?.title||g.topicId)}); } });
+      const out=[];
+      Object.entries(TOPICS).forEach(function([id,t]){
+        if((t.title||'').toLowerCase().includes(q)||(t.desc||'').toLowerCase().includes(q)){
+          out.push({type:'topic',id:id,title:t.title,desc:t.desc});
+        }
+      });
+      readDB().forEach(function(g){
+        if(g.title.toLowerCase().includes(q)){
+          out.push({type:'guide',id:g.id,topicId:g.topicId,title:g.title,desc:'Guia em '+(TOPICS[g.topicId]?.title||g.topicId)});
+        }
+      });
       return out;
     }
-    $('#doSearch').onclick=function(){ const q=$('#q').value; const res=search(q); const wrap=$('#searchRes'); wrap.innerHTML=''; if(!q.trim()){wrap.innerHTML='<p class="text-gray-500">Digite algo para pesquisar.</p>';return;} if(!res.length){wrap.innerHTML='<p class="text-gray-500">Nada encontrado.</p>';return;} res.forEach(function(r){ const d=document.createElement('div'); d.className='border rounded-lg p-3'; d.innerHTML='<div class="text-sm '+(r.type==='topic'?'text-indigo-600':'text-green-700')+'">'+(r.type==='topic'?'Tópico':'Guia')+'</div><div class="font-semibold">'+r.title+'</div><div class="text-gray-600 text-sm">'+(r.desc||'')+'</div><div class="mt-2"><button class="btn btn-ghost" data-open>Abrir</button></div>'; d.querySelector('[data-open]').onclick=function(){ if(r.type==='topic'){ currentTopic=r.id; setTab('content'); renderTopic(); } else { currentTopic=r.topicId; setTab('content'); renderTopic(); focusGuide(r.id); } }; wrap.appendChild(d); }); };
+
+    const qInput = $('#q');
+    const searchWrap = $('#searchRes');
+
+    function renderSearchResults(){
+      const q = qInput.value;
+      const res = search(q);
+      const wrap = searchWrap;
+      wrap.innerHTML = '';
+
+      if(!q.trim()){
+        wrap.innerHTML = '<p class="text-gray-500">Digite algo para pesquisar.</p>';
+        return;
+      }
+      if(!res.length){
+        wrap.innerHTML = '<p class="text-gray-500">Nada encontrado.</p>';
+        return;
+      }
+
+      res.forEach(function(r){
+        const d=document.createElement('div');
+        d.className='border rounded-lg p-3';
+        d.innerHTML =
+          '<div class="text-sm '+(r.type==='topic'?'text-indigo-600':'text-green-700')+'">'+
+            (r.type==='topic'?'Tópico':'Guia')+
+          '</div>'+
+          '<div class="font-semibold">'+r.title+'</div>'+
+          '<div class="text-gray-600 text-sm">'+(r.desc||'')+'</div>'+
+          '<div class="mt-2"><button class="btn btn-ghost" data-open>Abrir</button></div>';
+
+        d.querySelector('[data-open]').onclick=function(){
+          if(r.type==='topic'){
+            currentTopic=r.id;
+            setTab('content');
+            renderTopic();
+          } else {
+            currentTopic=r.topicId;
+            setTab('content');
+            renderTopic();
+            focusGuide(r.id);
+          }
+        };
+        wrap.appendChild(d);
+      });
+    }
+
+    // botão Buscar
+    $('#doSearch').onclick = function(){
+      renderSearchResults();
+    };
+
+    // busca "ao vivo" enquanto digita
+    qInput.addEventListener('input', function(){
+      renderSearchResults();
+    });
+
+    // Enter no campo também busca
+    qInput.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        renderSearchResults();
+      }
+    });
 
     function renderFavs(){
       const fav=readFav(); const wrap=$('#favList'); wrap.innerHTML=''; if(!fav.topics.length && !fav.guides.length){ wrap.innerHTML='<p class="text-gray-500">Você ainda não adicionou favoritos.</p>'; return; }
