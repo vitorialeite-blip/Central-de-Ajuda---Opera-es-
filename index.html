@@ -5,7 +5,7 @@
   <title>Operações & Riscos — Central de Ajuda</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <!-- Tailwind (CDN) -->
+  <!-- Tailwind (CDN para teste/local). Para produção, use build com PostCSS. -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Quill -->
@@ -349,7 +349,7 @@
         </div>
 
         <div class="flex items-center justify-between pt-2">
-          <span class="text-xs text-gray-500">Dica: anexe a imagem, cole a <b>URL</b> e adicione links úteis em cada passo.</span>
+          <span class="text-xs text-gray-500">Dica: anexe a imagem, vídeo, cole a <b>URL</b> e adicione links úteis em cada passo.</span>
           <div class="flex gap-2">
             <button type="button" id="btnDeleteGuide" class="btn btn-danger hidden">Excluir guia</button>
             <button class="btn btn-primary" type="submit">Salvar</button>
@@ -405,6 +405,7 @@
       'estruturas-dados':{title:'Estruturas de dados',desc:'Dicionários e schemas.'},
       'modelagens-automacoes':{title:'Modelagens e automações de processos',desc:'Fluxos e integrações.'},
 
+      /* === Ausências & Backups === */
       ausencias:{
         title:'Ausências & Backups',
         desc:'',
@@ -466,78 +467,24 @@
     const $$=(s,p=document)=>[...p.querySelectorAll(s)];
     const nowFmt=()=>new Date().toLocaleString('pt-BR');
     const openModal=(el,v)=>{el.classList.toggle('hidden',!v);el.classList.toggle('flex',v);};
-
     const DB_KEY='or_help_guides_v4';
     const FAV_KEY='or_help_favs_v1';
     const SUB_KEY='or_help_subtitles_v1';
     const ABS_KEY='or_help_absences_v1';
     const ABS_ACTS_KEY='or_help_absences_acts_v1';
 
-    // ⚠️ TROCAR pela URL REAL do seu Worker
-    const API_BASE = 'https://central-ajuda-api.seuusuario.workers.dev';
-
-    async function kvGet(key, fallback) {
-      try {
-        const res = await fetch(`${API_BASE}/store/${encodeURIComponent(key)}`);
-        if (!res.ok) throw new Error('Status ' + res.status);
-        const text = await res.text();
-        if (!text) return fallback;
-        return JSON.parse(text);
-      } catch (e) {
-        console.error('KV GET erro para', key, e);
-        return fallback;
-      }
-    }
-
-    async function kvPut(key, value) {
-      try {
-        await fetch(`${API_BASE}/store/${encodeURIComponent(key)}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(value)
-        });
-      } catch (e) {
-        console.error('KV PUT erro para', key, e);
-      }
-    }
-
-    async function syncFromServer() {
-      const [guides, favs, subs, abs, acts] = await Promise.all([
-        kvGet(DB_KEY, null),
-        kvGet(FAV_KEY, null),
-        kvGet(SUB_KEY, null),
-        kvGet(ABS_KEY, null),
-        kvGet(ABS_ACTS_KEY, null),
-      ]);
-
-      if (guides) localStorage.setItem(DB_KEY, JSON.stringify(guides));
-      if (favs) localStorage.setItem(FAV_KEY, JSON.stringify(favs));
-      if (subs) localStorage.setItem(SUB_KEY, JSON.stringify(subs));
-      if (abs) localStorage.setItem(ABS_KEY, JSON.stringify(abs));
-      if (acts) localStorage.setItem(ABS_ACTS_KEY, JSON.stringify(acts));
-    }
-
-    function syncKeyToServer(key) {
-      const raw = localStorage.getItem(key);
-      if (raw === null) return;
-      try {
-        const json = JSON.parse(raw);
-        kvPut(key, json);
-      } catch (e) {
-        console.error('Erro ao sincronizar chave', key, e);
-      }
-    }
-
     const readDB=()=>JSON.parse(localStorage.getItem(DB_KEY)||'[]');
-    const writeDB=(a)=>{localStorage.setItem(DB_KEY,JSON.stringify(a));syncKeyToServer(DB_KEY);};
+    const writeDB=(a)=>localStorage.setItem(DB_KEY,JSON.stringify(a));
     const readFav=()=>JSON.parse(localStorage.getItem(FAV_KEY)||'{"topics":[],"guides":[]}');
-    const writeFav=(v)=>{localStorage.setItem(FAV_KEY,JSON.stringify(v));syncKeyToServer(FAV_KEY);};
+    const writeFav=(v)=>localStorage.setItem(FAV_KEY,JSON.stringify(v));
     const readSubs=()=>JSON.parse(localStorage.getItem(SUB_KEY)||'{}');
-    const writeSubs=(v)=>{localStorage.setItem(SUB_KEY,JSON.stringify(v));syncKeyToServer(SUB_KEY);};
+    const writeSubs=(v)=>localStorage.setItem(SUB_KEY,JSON.stringify(v));
     const readAbs=()=>JSON.parse(localStorage.getItem(ABS_KEY)||'[]');
-    const writeAbs=(v)=>{localStorage.setItem(ABS_KEY,JSON.stringify(v));syncKeyToServer(ABS_KEY);};
-
+    const writeAbs=(v)=>localStorage.setItem(ABS_KEY,JSON.stringify(v));
     const fileToBase64=(f)=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
+
+    const normalizeUrl=(u)=>{u=(u||'').trim(); if(!u) return ''; if(!/^https?:\/\//i.test(u)) u='https://'+u; return u;};
+    const parseLinks=(raw)=> (raw||'').split(/\r?\n|,|;/).map(v=>normalizeUrl(v)).filter(v=>v && /^https?:\/\//i.test(v));
 
     const DEFAULT_ACTIVITIES = [
       'Credenciamento','Descredenciamento','1ª Venda (KYC)','Movimentações',
@@ -546,7 +493,7 @@
       'Estruturas de dados','Modelagens e automações de processos'
     ];
     const getSavedActs = () => JSON.parse(localStorage.getItem(ABS_ACTS_KEY) || '[]');
-    const writeActs = (arr) => {localStorage.setItem(ABS_ACTS_KEY, JSON.stringify(arr || []));syncKeyToServer(ABS_ACTS_KEY);};
+    const writeActs = (arr) => localStorage.setItem(ABS_ACTS_KEY, JSON.stringify(arr || []));
     const readActs = () => {
       const saved = getSavedActs();
       const set = new Set([...DEFAULT_ACTIVITIES, ...saved]);
@@ -564,6 +511,9 @@
       if(changed) writeSubs(subs);
     }
 
+    // NÃO recria guia padrão automaticamente
+    cleanupOrphanSubtitles();
+
     let currentTopic='credenciamento';
     let editingId=null;
 
@@ -576,6 +526,7 @@
       if(name==='favs') renderFavs();
     }
     tabsBtns.forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
+    setTab('content');
 
     /* ===== Accordion ===== */
     function initAccordion(){
@@ -617,6 +568,7 @@
         renderGuides();
       }
     }
+    renderTopic();
 
     $$('.sidebar-item[data-topic]').forEach(a=>{
       a.addEventListener('click',(e)=>{e.preventDefault();currentTopic=a.dataset.topic;setTab('content');renderTopic();});
@@ -646,6 +598,7 @@
         });
       });
     }
+    renderSubsInSidebar();
 
     function addSubRow(title='', desc='', guideId=''){
       const guides = readDB().filter(function(g){return g.topicId===currentTopic;});
@@ -675,6 +628,7 @@
     btnAddSubRow.onclick=function(){addSubRow();};
     btnCloseSub.onclick=function(){openModal(subModal,false);};
 
+    // Atalho S sem atrapalhar quando estiver digitando
     document.addEventListener('keydown', function(e) {
       const tag = e.target.tagName.toLowerCase();
       const isTypingElement =
@@ -704,6 +658,7 @@
       openModal(subModal,false); renderSubsInSidebar();
     };
 
+    /* ===== Guias ===== */
     function getSubtitleForGuide(topicId, guideId){
       const arr = (readSubs()[topicId] || []);
       const s = arr.find(function(x){return x.guideId === guideId;});
@@ -720,9 +675,23 @@
       const first=el.querySelector('details'); if(first) first.open=true;
     }
 
-    function normalizeUrl(u){u=(u||'').trim(); if(!u) return ''; if(!/^https?:\/\//i.test(u)) u='https://'+u; return u;}
-    function parseLinks(raw){
-      return (raw||'').split(/\r?\n|,|;/).map(v=>normalizeUrl(v)).filter(v=>v && /^https?:\/\//i.test(v));
+    /* === NOVO: helper para imagem OU vídeo === */
+    function buildMediaHtml(src, stepIndex){
+      if(!src) return '';
+
+      const isVideo =
+        /^data:video\//.test(src) ||
+        /\.(mp4|webm|ogg)(\?|#|$)/i.test(src);
+
+      if(isVideo){
+        return ''+
+          '<video controls class="w-full rounded max-h-[260px]">'+
+            '<source src="'+src+'">'+
+            'Seu navegador não suporta vídeo.'+
+          '</video>';
+      }
+
+      return '<img src="'+src+'" class="thumb w-full cursor-zoom-in rounded" alt="Passo '+(stepIndex+1)+'">';
     }
 
     function renderGuides(){
@@ -774,15 +743,22 @@
                 linksHtml = '<div class="pt-1"><div class="text-xs text-gray-500 mb-1">Links úteis</div><ul class="list-disc pl-6 text-sm">'+items+'</ul></div>';
               }
 
-              var imgHtml = s.imgUrl ? '<img src="'+s.imgUrl+'" class="thumb w-full cursor-zoom-in rounded" alt="Passo '+(i+1)+'">' : '';
+              var mediaHtml = buildMediaHtml(s.imgUrl, i);
               var descHtml = s.desc ? '<div class="prose prose-sm max-w-none">'+s.desc+'</div>' : '';
               det.innerHTML =
                 '<summary class="cursor-pointer select-none flex items-center gap-2 px-3 py-2 bg-gray-50 text-gray-900">'+
                   '<span class="inline-flex items-center justify-center h-6 px-2 text-xs font-semibold rounded-full bg-gray-800 text-white">Passo '+(i+1)+'</span>'+
                   '<span class="font-medium">'+(s.title||'Sem título')+'</span>'+
                 '</summary>'+
-                '<div class="p-3 space-y-3">'+ imgHtml + descHtml + linksHtml +'</div>';
-              const img=det.querySelector('img'); if(img){ img.onclick=function(){ $('#imgViewer').src=s.imgUrl; openModal($('#imgModal'),true); }; }
+                '<div class="p-3 space-y-3">'+ mediaHtml + descHtml + linksHtml +'</div>';
+
+              const img = det.querySelector('img.thumb');
+              if(img){
+                img.onclick=function(){
+                  $('#imgViewer').src=s.imgUrl;
+                  openModal($('#imgModal'),true);
+                };
+              }
               body.appendChild(det);
             });
           }
@@ -814,6 +790,7 @@
       });
     }
 
+    /* ===== Modal Guia / Quill ===== */
     const guideModal=$('#guideModal'), imgModal=$('#imgModal'), stepsWrap=$('#stepsWrap');
     const btnAddStep=$('#btnAddStep'), btnClose=$('#closeGuide'), closeImg=$('#closeImg');
     const btnDeleteGuide=$('#btnDeleteGuide'), form=$('#guideForm'), modTitle=$('#modalTitle');
@@ -848,9 +825,9 @@
       d.innerHTML =
         '<div class="grid sm:grid-cols-2 gap-3">'+
           '<div><label class="text-sm text-gray-600">Título do passo</label><input class="w-full border rounded-lg px-3 py-2" name="st_title" value="'+(title||'')+'"></div>'+
-          '<div><label class="text-sm text-gray-600">Imagem do passo</label><input type="file" accept="image/*" class="w-full border rounded-lg px-3 py-2" name="st_file"></div>'+
+          '<div><label class="text-sm text-gray-600">Imagem ou vídeo do passo</label><input type="file" accept="image/*,video/*" class="w-full border rounded-lg px-3 py-2" name="st_file"></div>'+
         '</div>'+
-        '<div><label class="text-sm text-gray-600">URL da imagem</label><input class="w-full border rounded-lg px-3 py-2" name="st_url" value="'+(url||'')+'" placeholder="https://..."></div>'+
+        '<div><label class="text-sm text-gray-600">URL da imagem/vídeo</label><input class="w-full border rounded-lg px-3 py-2" name="st_url" value="'+(url||'')+'" placeholder="https://..."></div>'+
         '<div><label class="text-sm text-gray-600">Links úteis (um por linha)</label><textarea class="w-full border rounded-lg px-3 py-2" rows="3" name="st_links">'+(Array.isArray(linksArr)?linksArr.join('\n'):'')+'</textarea></div>'+
         '<div><label class="text-sm text-gray-600">Descrição / instruções</label><div data-quill-holder></div></div>'+
         '<div class="flex justify-end"><button type="button" class="btn btn-ghost text-red-600 border-red-200 hover:bg-red-50" name="st_remove">Remover passo</button></div>';
@@ -868,7 +845,7 @@
         const g=readDB().find(function(x){return x.id===id;});
         modTitle.textContent='Editar guia'; btnDeleteGuide.classList.remove('hidden');
         form.title.value=g.title; form.author.value=g.author; form.role.value=g.role; form.updated.value=g.updated;
-        (g.steps||[]).forEach(function(st){addStep(st.title,st.desc,st.imgUrl,st.links||[]);});
+        (g.steps||[]).forEach(function(st){addStep(st.title,st.desc,st.imgUrl || st.url,st.links||[]);});
       }else{
         modTitle.textContent='Adicionar guia'; btnDeleteGuide.classList.add('hidden'); addStep(); addStep();
       }
@@ -921,6 +898,7 @@
       }
     };
 
+    /* ===== Ausências & Backups (UI) ===== */
     function mountAbsencesUI(){
       const form = $('#absForm');
       const inpP = $('#absPrincipal');
@@ -1071,9 +1049,9 @@
             row.querySelector('[data-save]').onclick = ()=>{
               const newName = (input.value||'').trim();
               if(!newName){ input.focus(); return; }
+              const currentSaved = getSavedActs();
               const exists = readActs().some(a=>a!==act && a.toLowerCase()===newName.toLowerCase());
               if(exists){ alert('Já existe uma atividade com esse nome.'); return; }
-              const currentSaved = getSavedActs();
               const idx = currentSaved.indexOf(act);
               if(idx>=0){ currentSaved[idx]=newName; writeActs(currentSaved); }
               const regs = readAbs().map(r=>{
@@ -1109,6 +1087,7 @@
       renderList();
     }
 
+    /* ===== Busca / Favoritos ===== */
     function search(q){
       q=q.trim().toLowerCase();
       const out=[];
@@ -1170,12 +1149,17 @@
       });
     }
 
+    // botão Buscar
     $('#doSearch').onclick = function(){
       renderSearchResults();
     };
+
+    // busca "ao vivo" enquanto digita
     qInput.addEventListener('input', function(){
       renderSearchResults();
     });
+
+    // Enter no campo também busca
     qInput.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){
         e.preventDefault();
@@ -1188,16 +1172,6 @@
       if(fav.topics.length){ const box=document.createElement('div'); box.className='border rounded-xl p-4'; box.innerHTML='<div class="font-semibold mb-2">Tópicos</div>'; fav.topics.forEach(function(id){ const t=TOPICS[id]; if(!t) return; const a=document.createElement('a'); a.href='#'; a.className='block link hover:underline'; a.textContent=t.title; a.onclick=function(e){e.preventDefault();currentTopic=id;setTab('content');renderTopic();}; box.appendChild(a); }); wrap.appendChild(box); }
       if(fav.guides.length){ const box=document.createElement('div'); box.className='border rounded-xl p-4'; box.innerHTML='<div class="font-semibold mb-2">Guias</div>'; fav.guides.forEach(function(id){ const g=readDB().find(function(x){return x.id===id;}); if(!g) return; const btn=document.createElement('button'); btn.className='block link hover:underline text-left'; btn.textContent=g.title+' — '+(TOPICS[g.topicId]?.title||g.topicId); btn.onclick=function(){currentTopic=g.topicId;setTab('content');renderTopic();focusGuide(g.id);}; box.appendChild(btn); }); wrap.appendChild(box); }
     }
-
-    async function bootstrap() {
-      await syncFromServer();
-      cleanupOrphanSubtitles();
-      setTab('content');
-      renderSubsInSidebar();
-      renderTopic();
-    }
-
-    bootstrap();
   </script>
 </body>
 </html>
