@@ -349,7 +349,7 @@
         </div>
 
         <div class="flex items-center justify-between pt-2">
-          <span class="text-xs text-gray-500">Dica: anexe a imagem, vídeo, cole a <b>URL</b> e adicione links úteis em cada passo.</span>
+          <span class="text-xs text-gray-500">Dica: anexe a imagem/vídeo, cole a <b>URL</b> e adicione links úteis em cada passo.</span>
           <div class="flex gap-2">
             <button type="button" id="btnDeleteGuide" class="btn btn-danger hidden">Excluir guia</button>
             <button class="btn btn-primary" type="submit">Salvar</button>
@@ -379,14 +379,23 @@
 
   <script>
     /* ===== Polyfills ===== */
-    function uuid(){ try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){} return 'id-'+Math.random().toString(36).slice(2)+Date.now().toString(36); }
-    if(typeof window.CSS==='undefined') window.CSS={};
-    if(typeof window.CSS.escape!=='function'){ window.CSS.escape=function(s){ return String(s).replace(/[^a-zA-Z0-9_\-]/g,'\\$&'); }; }
+    function uuid() {
+      try {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      } catch (e) {}
+      return 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
+    if (typeof window.CSS === 'undefined') window.CSS = {};
+    if (typeof window.CSS.escape !== 'function') {
+      window.CSS.escape = function (s) {
+        return String(s).replace(/[^a-zA-Z0-9_\-]/g, '\\$&');
+      };
+    }
 
     /* ====== Tópicos ====== */
     const TOPICS = {
-      'intro-sobre':{ title:'Sobre esta central', desc:'', html:'<h2>Bem-vindo 👋</h2><p>Use <b>Favoritos</b> para marcar o que você consulta com frequência.</p>' },
-      'intro-visao':{ title:'Gestão de Operações e Risco — visão', desc:'', html:'<h2>Visão concentrada</h2><p>Menu em árvore à esquerda e leitura à direita.</p>' },
+      'intro-sobre': { title:'Sobre esta central', desc:'', html:'<h2>Bem-vindo 👋</h2><p>Use <b>Favoritos</b> para marcar o que você consulta com frequência.</p>' },
+      'intro-visao': { title:'Gestão de Operações e Risco — visão', desc:'', html:'<h2>Visão concentrada</h2><p>Menu em árvore à esquerda e leitura à direita.</p>' },
       credenciamento:{title:'Credenciamento',desc:'Credenciamento — Criação/ativação de conta, gateways, adquirentes, VP.'},
       descredenciamento:{title:'Descredenciamento',desc:'Encerramento/ajustes de contas e adequações.'},
       kyc:{title:'1ª Venda (KYC)',desc:'Análise do modelo de negócio e risco.'},
@@ -405,7 +414,6 @@
       'estruturas-dados':{title:'Estruturas de dados',desc:'Dicionários e schemas.'},
       'modelagens-automacoes':{title:'Modelagens e automações de processos',desc:'Fluxos e integrações.'},
 
-      /* === Ausências & Backups === */
       ausencias:{
         title:'Ausências & Backups',
         desc:'',
@@ -462,29 +470,84 @@
       }
     };
 
+    /* ===== Backend compartilhado (Worker + KV) ===== */
+    const API_URL = 'https://central-ajuda-api.vitoria-leite.workers.dev/db';
+
+    const STATE = {
+      guides: [],
+      subs: {},
+      absences: [],
+      acts: []
+    };
+
+    function applyRemoteState(data) {
+      if (!data || typeof data !== 'object') return;
+      STATE.guides   = Array.isArray(data.guides)   ? data.guides   : [];
+      STATE.subs     = data.subs     || {};
+      STATE.absences = Array.isArray(data.absences) ? data.absences : [];
+      STATE.acts     = Array.isArray(data.acts)     ? data.acts     : [];
+    }
+
+    function saveRemote() {
+      const payload = {
+        guides:   STATE.guides   || [],
+        subs:     STATE.subs     || {},
+        absences: STATE.absences || [],
+        acts:     STATE.acts     || []
+      };
+      fetch(API_URL, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      }).catch(err => console.error('Erro salvando base remota', err));
+    }
+
+    async function loadRemote() {
+      try {
+        const res = await fetch(API_URL);
+        if (res.ok) {
+          const data = await res.json();
+          applyRemoteState(data);
+        } else {
+          console.warn('Erro HTTP ao carregar base remota', res.status);
+        }
+      } catch (e) {
+        console.warn('Não foi possível carregar base remota, usando vazio', e);
+      }
+      cleanupOrphanSubtitles();
+      renderTopic();
+      renderSubsInSidebar();
+    }
+
     /* ===== Helpers ===== */
-    const $=(s,p=document)=>p.querySelector(s);
-    const $$=(s,p=document)=>[...p.querySelectorAll(s)];
-    const nowFmt=()=>new Date().toLocaleString('pt-BR');
+    const $  = (s,p=document)=>p.querySelector(s);
+    const $$ = (s,p=document)=>[...p.querySelectorAll(s)];
+    const nowFmt   = ()=>new Date().toLocaleString('pt-BR');
     const openModal=(el,v)=>{el.classList.toggle('hidden',!v);el.classList.toggle('flex',v);};
-    const DB_KEY='or_help_guides_v4';
-    const FAV_KEY='or_help_favs_v1';
-    const SUB_KEY='or_help_subtitles_v1';
-    const ABS_KEY='or_help_absences_v1';
-    const ABS_ACTS_KEY='or_help_absences_acts_v1';
 
-    const readDB=()=>JSON.parse(localStorage.getItem(DB_KEY)||'[]');
-    const writeDB=(a)=>localStorage.setItem(DB_KEY,JSON.stringify(a));
-    const readFav=()=>JSON.parse(localStorage.getItem(FAV_KEY)||'{"topics":[],"guides":[]}');
-    const writeFav=(v)=>localStorage.setItem(FAV_KEY,JSON.stringify(v));
-    const readSubs=()=>JSON.parse(localStorage.getItem(SUB_KEY)||'{}');
-    const writeSubs=(v)=>localStorage.setItem(SUB_KEY,JSON.stringify(v));
-    const readAbs=()=>JSON.parse(localStorage.getItem(ABS_KEY)||'[]');
-    const writeAbs=(v)=>localStorage.setItem(ABS_KEY,JSON.stringify(v));
-    const fileToBase64=(f)=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
+    const FAV_KEY = 'or_help_favs_v1';
+    const readFav = ()=>JSON.parse(localStorage.getItem(FAV_KEY)||'{"topics":[],"guides":[]}');
+    const writeFav= v => localStorage.setItem(FAV_KEY, JSON.stringify(v));
 
-    const normalizeUrl=(u)=>{u=(u||'').trim(); if(!u) return ''; if(!/^https?:\/\//i.test(u)) u='https://'+u; return u;};
-    const parseLinks=(raw)=> (raw||'').split(/\r?\n|,|;/).map(v=>normalizeUrl(v)).filter(v=>v && /^https?:\/\//i.test(v));
+    const fileToBase64 = f => new Promise((res,rej)=>{
+      const r = new FileReader();
+      r.onload = ()=>res(r.result);
+      r.onerror= rej;
+      r.readAsDataURL(f);
+    });
+
+    const normalizeUrl = u => {
+      u = (u||'').trim();
+      if (!u) return '';
+      if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+      return u;
+    };
+
+    const parseLinks = raw =>
+      (raw||'')
+        .split(/\r?\n|,|;/)
+        .map(v=>normalizeUrl(v))
+        .filter(v=>v && /^https?:\/\//i.test(v));
 
     const DEFAULT_ACTIVITIES = [
       'Credenciamento','Descredenciamento','1ª Venda (KYC)','Movimentações',
@@ -492,9 +555,17 @@
       'Processo de Análise','Monitoramentos','Alertas POS','Recebíveis (Fraude)',
       'Estruturas de dados','Modelagens e automações de processos'
     ];
-    const getSavedActs = () => JSON.parse(localStorage.getItem(ABS_ACTS_KEY) || '[]');
-    const writeActs = (arr) => localStorage.setItem(ABS_ACTS_KEY, JSON.stringify(arr || []));
-    const readActs = () => {
+
+    // DB compartilhado (STATE + Worker)
+    const readDB    = () => STATE.guides   || [];
+    const writeDB   = a  => { STATE.guides   = a || []; saveRemote(); };
+    const readSubs  = () => STATE.subs     || {};
+    const writeSubs = v  => { STATE.subs     = v || {}; saveRemote(); };
+    const readAbs   = () => STATE.absences || [];
+    const writeAbs  = v  => { STATE.absences = v || []; saveRemote(); };
+    const getSavedActs = () => STATE.acts || [];
+    const writeActs    = arr => { STATE.acts = arr || []; saveRemote(); };
+    const readActs     = () => {
       const saved = getSavedActs();
       const set = new Set([...DEFAULT_ACTIVITIES, ...saved]);
       return Array.from(set).sort((a,b)=>a.localeCompare(b,'pt-BR'));
@@ -502,28 +573,37 @@
 
     function cleanupOrphanSubtitles(){
       const ids = new Set(readDB().map(g=>g.id));
-      const subs = readSubs(); let changed=false;
+      const subs = readSubs();
+      let changed = false;
       Object.keys(subs).forEach(topicId=>{
-        const arr=subs[topicId] || [];
+        const arr = subs[topicId] || [];
         const filtered = arr.filter(s => !s.guideId || ids.has(s.guideId));
-        if(filtered.length !== arr.length){ subs[topicId] = filtered; changed = true; }
+        if (filtered.length !== arr.length) {
+          subs[topicId] = filtered;
+          changed = true;
+        }
       });
-      if(changed) writeSubs(subs);
+      if (changed) writeSubs(subs);
     }
 
-    // NÃO recria guia padrão automaticamente
-    cleanupOrphanSubtitles();
-
     let currentTopic='credenciamento';
-    let editingId=null;
+    let editingId = null;
 
     /* ===== Abas ===== */
-    const tabsBtns=$$('[data-tab]');
-    const tabsPanes={content:$('#tab-content'), index:$('#tab-index'), search:$('#tab-search'), favs:$('#tab-favs')};
+    const tabsBtns = $$('[data-tab]');
+    const tabsPanes = {
+      content: $('#tab-content'),
+      index:   $('#tab-index'),
+      search:  $('#tab-search'),
+      favs:    $('#tab-favs')
+    };
+
     function setTab(name){
       tabsBtns.forEach(b=>b.classList.toggle('tab-on', b.dataset.tab===name));
-      Object.entries(tabsPanes).forEach(([k,p])=>{ if(p) p.classList.toggle('hidden',k!==name); });
-      if(name==='favs') renderFavs();
+      Object.entries(tabsPanes).forEach(([k,p])=>{
+        if (p) p.classList.toggle('hidden', k!==name);
+      });
+      if (name==='favs') renderFavs();
     }
     tabsBtns.forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
     setTab('content');
@@ -532,33 +612,43 @@
     function initAccordion(){
       $$('[data-acc]').forEach(btn=>{
         btn.addEventListener('click', ()=>{
-          const key=btn.getAttribute('data-acc');
-          const pane=$('#acc-'+key); const ic=$('[data-acc-icon="'+key+'"]');
-          const hidden=pane.classList.toggle('hidden'); ic.textContent= hidden ? '▲':'▼';
+          const key = btn.getAttribute('data-acc');
+          const pane= $('#acc-'+key);
+          const ic  = $('[data-acc-icon="'+key+'"]');
+          const hidden = pane.classList.toggle('hidden');
+          ic.textContent = hidden ? '▲' : '▼';
         });
       });
     }
     initAccordion();
 
     /* ===== Tópico/Gerais ===== */
-    const topicTitleEl=$('#topicTitle'), topicDescEl=$('#topicDesc'), topicHtmlEl=$('#topicHtml');
-    const guidesTitleEl=$('#guidesTitle'), guidesEl=$('#guides');
-    const btnFav=$('#btnFav'), btnAdd=$('#btnAdd');
+    const topicTitleEl = $('#topicTitle');
+    const topicDescEl  = $('#topicDesc');
+    const topicHtmlEl  = $('#topicHtml');
+    const guidesTitleEl= $('#guidesTitle');
+    const guidesEl     = $('#guides');
+    const btnFav       = $('#btnFav');
+    const btnAdd       = $('#btnAdd');
 
     function renderTopic(){
-      const t=TOPICS[currentTopic]||{title:'Tópico',desc:''};
-      topicTitleEl.textContent=t.title; topicDescEl.textContent=t.desc||'';
+      const t = TOPICS[currentTopic] || {title:'Tópico',desc:''};
+      topicTitleEl.textContent = t.title;
+      topicDescEl.textContent  = t.desc || '';
       $$('.sidebar-item').forEach(a=>a.classList.toggle('active', a.dataset.topic===currentTopic));
-      const fav=readFav(); btnFav.textContent = fav.topics.includes(currentTopic) ? '★ Remover dos Favoritos' : '☆ Favoritar tópico';
+      const fav = readFav();
+      btnFav.textContent = fav.topics.includes(currentTopic)
+        ? '★ Remover dos Favoritos'
+        : '☆ Favoritar tópico';
 
-      if(t.html){
-        topicHtmlEl.innerHTML=t.html;
+      if (t.html){
+        topicHtmlEl.innerHTML = t.html;
         topicHtmlEl.classList.remove('hidden');
         guidesTitleEl.classList.add('hidden');
-        guidesEl.innerHTML='';
+        guidesEl.innerHTML = '';
         btnAdd.classList.add('hidden');
 
-        if(currentTopic==='ausencias'){
+        if (currentTopic==='ausencias'){
           try { mountAbsencesUI(); } catch(e){ console.error('Ausências UI error:', e); }
         }
       } else {
@@ -568,45 +658,66 @@
         renderGuides();
       }
     }
-    renderTopic();
 
     $$('.sidebar-item[data-topic]').forEach(a=>{
-      a.addEventListener('click',(e)=>{e.preventDefault();currentTopic=a.dataset.topic;setTab('content');renderTopic();});
+      a.addEventListener('click', e=>{
+        e.preventDefault();
+        currentTopic = a.dataset.topic;
+        setTab('content');
+        renderTopic();
+      });
     });
 
-    btnFav.onclick=()=>{
-      const fav=readFav(); const i=fav.topics.indexOf(currentTopic);
-      if(i>=0) fav.topics.splice(i,1); else fav.topics.push(currentTopic);
-      writeFav(fav); renderTopic();
+    btnFav.onclick = ()=>{
+      const fav = readFav();
+      const i = fav.topics.indexOf(currentTopic);
+      if (i>=0) fav.topics.splice(i,1);
+      else      fav.topics.push(currentTopic);
+      writeFav(fav);
+      renderTopic();
     };
 
     /* ===== Subtítulos ===== */
-    const subModal=$('#subModal'), subTopicName=$('#subTopicName'), subForm=$('#subForm'), subList=$('#subList');
-    const btnAddSubRow=$('#btnAddSubRow'), btnCloseSub=$('#closeSub');
+    const subModal    = $('#subModal');
+    const subTopicName= $('#subTopicName');
+    const subForm     = $('#subForm');
+    const subList     = $('#subList');
+    const btnAddSubRow= $('#btnAddSubRow');
+    const btnCloseSub = $('#closeSub');
 
     function renderSubsInSidebar(){
       $$('[data-subs-for]').forEach(c=>{c.innerHTML='';});
-      const subs=readSubs();
+      const subs = readSubs();
       Object.entries(subs).forEach(([topicId, arr])=>{
-        const box=$('[data-subs-for="'+topicId+'"]');
-        if(!box || !arr || !arr.length) return;
+        const box = $('[data-subs-for="'+topicId+'"]');
+        if (!box || !arr || !arr.length) return;
         arr.forEach((s,i)=>{
-          const a=document.createElement('a'); a.href='#'; a.className='sidebar-item sub-link hover:bg-gray-50';
-          a.textContent=(s.guideId?'↳ ':'')+(i+1)+'. '+(s.title||'Sem título');
-          a.onclick=function(e){e.preventDefault();currentTopic=topicId; setTab('content'); renderTopic(); if(s.guideId){ setTimeout(function(){focusGuide(s.guideId);}, 80); } };
+          const a = document.createElement('a');
+          a.href='#';
+          a.className='sidebar-item sub-link hover:bg-gray-50';
+          a.textContent = (s.guideId?'↳ ':'') + (i+1)+'. '+(s.title||'Sem título');
+          a.onclick = function(e){
+            e.preventDefault();
+            currentTopic = topicId;
+            setTab('content');
+            renderTopic();
+            if (s.guideId){
+              setTimeout(()=>{focusGuide(s.guideId);},80);
+            }
+          };
           box.appendChild(a);
         });
       });
     }
-    renderSubsInSidebar();
 
     function addSubRow(title='', desc='', guideId=''){
-      const guides = readDB().filter(function(g){return g.topicId===currentTopic;});
+      const guides = readDB().filter(g=>g.topicId===currentTopic);
       const options = ['<option value="">(sem vínculo)</option>'].concat(
-        guides.map(function(g){return '<option value="'+g.id+'" '+(g.id===guideId?'selected':'')+'>'+g.title+'</option>';})
+        guides.map(g=>'<option value="'+g.id+'" '+(g.id===guideId?'selected':'')+'>'+g.title+'</option>')
       ).join('');
-      const row=document.createElement('div'); row.className='border rounded-xl p-3 space-y-2';
-      row.innerHTML=
+      const row = document.createElement('div');
+      row.className='border rounded-xl p-3 space-y-2';
+      row.innerHTML =
         '<div class="grid sm:grid-cols-2 gap-3">'+
           '<div><label class="text-sm text-gray-600">Título do subtítulo</label><input class="w-full border rounded-lg px-3 py-2" value="'+(title||'')+'"></div>'+
           '<div><label class="text-sm text-gray-600">Aponta para (guia)</label><select class="w-full border rounded-lg px-3 py-2">'+options+'</select></div>'+
@@ -615,95 +726,100 @@
           '<div><label class="text-sm text-gray-600">Descrição (opcional)</label><textarea class="w-full border rounded-lg px-3 py-2" rows="2">'+(desc||'')+'</textarea></div>'+
           '<div class="flex items-end justify-end"><button type="button" class="btn btn-ghost text-red-600 border-red-200 hover:bg-red-50" data-remove>Remover</button></div>'+
         '</div>';
-      row.querySelector('[data-remove]').onclick=function(){row.remove();};
+      row.querySelector('[data-remove]').onclick = ()=>row.remove();
       subList.appendChild(row);
     }
 
     function openSubEditor(){
-      const t=TOPICS[currentTopic]; if(!t || t.html) return;
-      subTopicName.textContent=t.title; subList.innerHTML='';
-      const subs=readSubs()[currentTopic]||[]; subs.forEach(function(s){addSubRow(s.title, s.desc, s.guideId);});
-      if(subs.length===0) addSubRow(); openModal(subModal,true);
+      const t = TOPICS[currentTopic];
+      if (!t || t.html) return;
+      subTopicName.textContent = t.title;
+      subList.innerHTML = '';
+      const subs = readSubs()[currentTopic] || [];
+      subs.forEach(s=>addSubRow(s.title,s.desc,s.guideId));
+      if (!subs.length) addSubRow();
+      openModal(subModal,true);
     }
-    btnAddSubRow.onclick=function(){addSubRow();};
-    btnCloseSub.onclick=function(){openModal(subModal,false);};
 
-    // Atalho S sem atrapalhar quando estiver digitando
-    document.addEventListener('keydown', function(e) {
+    btnAddSubRow.onclick = ()=>addSubRow();
+    btnCloseSub.onclick  = ()=>openModal(subModal,false);
+
+    document.addEventListener('keydown', e=>{
       const tag = e.target.tagName.toLowerCase();
-      const isTypingElement =
-        tag === 'input' ||
-        tag === 'textarea' ||
-        tag === 'select' ||
-        e.target.isContentEditable;
-
-      if (isTypingElement) return;
-
-      if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.metaKey) {
+      const isTyping =
+        tag==='input' || tag==='textarea' || tag==='select' || e.target.isContentEditable;
+      if (isTyping) return;
+      if (e.key.toLowerCase()==='s' && !e.ctrlKey && !e.metaKey){
         e.preventDefault();
         openSubEditor();
       }
     });
 
-    subForm.onsubmit=function(e){
+    subForm.onsubmit = e=>{
       e.preventDefault();
       const arr=[];
-      subList.querySelectorAll('div.border.rounded-xl').forEach(function(row){
-        const title=row.querySelector('input').value.trim();
-        const desc=row.querySelector('textarea').value.trim();
-        const guideId=row.querySelector('select').value;
-        if(title || desc || guideId){ arr.push({title: title, desc: desc, guideId: guideId}); }
+      subList.querySelectorAll('div.border.rounded-xl').forEach(row=>{
+        const title   = row.querySelector('input').value.trim();
+        const desc    = row.querySelector('textarea').value.trim();
+        const guideId = row.querySelector('select').value;
+        if (title || desc || guideId) arr.push({title,desc,guideId});
       });
-      const all=readSubs(); all[currentTopic]=arr; writeSubs(all);
-      openModal(subModal,false); renderSubsInSidebar();
+      const all = readSubs();
+      all[currentTopic] = arr;
+      writeSubs(all);
+      openModal(subModal,false);
+      renderSubsInSidebar();
     };
 
     /* ===== Guias ===== */
     function getSubtitleForGuide(topicId, guideId){
-      const arr = (readSubs()[topicId] || []);
-      const s = arr.find(function(x){return x.guideId === guideId;});
+      const arr = readSubs()[topicId] || [];
+      const s = arr.find(x=>x.guideId===guideId);
       return s ? s.title : '';
     }
 
     function focusGuide(guideId){
-      if(!guideId) return;
+      if (!guideId) return;
       const el = document.querySelector('[data-guide="'+guideId+'"]');
-      if(!el) return;
-      const body=el.querySelector('[data-body]'); const toggle=el.querySelector('[data-toggle]');
-      if(body && body.classList.contains('hidden')){ body.classList.remove('hidden'); if(toggle){toggle.setAttribute('aria-expanded','true'); toggle.textContent='▾';} }
+      if (!el) return;
+      const body  = el.querySelector('[data-body]');
+      const toggle= el.querySelector('[data-toggle]');
+      if (body && body.classList.contains('hidden')){
+        body.classList.remove('hidden');
+        if (toggle){
+          toggle.setAttribute('aria-expanded','true');
+          toggle.textContent='▾';
+        }
+      }
       el.scrollIntoView({behavior:'smooth', block:'start'});
-      const first=el.querySelector('details'); if(first) first.open=true;
+      const first = el.querySelector('details');
+      if (first) first.open = true;
     }
 
-    /* === NOVO: helper para imagem OU vídeo === */
-    function buildMediaHtml(src, stepIndex){
-      if(!src) return '';
-
-      const isVideo =
-        /^data:video\//.test(src) ||
-        /\.(mp4|webm|ogg)(\?|#|$)/i.test(src);
-
-      if(isVideo){
-        return ''+
-          '<video controls class="w-full rounded max-h-[260px]">'+
-            '<source src="'+src+'">'+
-            'Seu navegador não suporta vídeo.'+
-          '</video>';
-      }
-
-      return '<img src="'+src+'" class="thumb w-full cursor-zoom-in rounded" alt="Passo '+(stepIndex+1)+'">';
+    function isVideo(url, mediaType){
+      if (mediaType && mediaType.startsWith('video/')) return true;
+      return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url||'');
     }
 
     function renderGuides(){
-      const guides=readDB().filter(function(g){return g.topicId===currentTopic;});
-      guidesEl.innerHTML=''; if(!guides.length){guidesEl.innerHTML='<p class="text-gray-500">Nenhum guia cadastrado.</p>';return;}
-      const fav=readFav();
-      guides.forEach(function(g){
+      const guides = readDB().filter(g=>g.topicId===currentTopic);
+      guidesEl.innerHTML='';
+      if (!guides.length){
+        guidesEl.innerHTML='<p class="text-gray-500">Nenhum guia cadastrado.</p>';
+        return;
+      }
+      const fav = readFav();
+      guides.forEach(g=>{
         const fOn = (fav.guides||[]).includes(g.id);
-        const card=document.createElement('div'); card.className='border rounded-xl p-4 card'; card.setAttribute('data-guide', g.id);
+        const card = document.createElement('div');
+        card.className='border rounded-xl p-4 card';
+        card.setAttribute('data-guide',g.id);
 
-        const subTitle = getSubtitleForGuide(g.topicId, g.id);
-        const subBadge = subTitle ? '<span class="px-2 py-1 rounded-full text-xs bg-indigo-50 text-indigo-700 whitespace-nowrap">'+subTitle+'</span>' : '';
+        const subTitle = getSubtitleForGuide(g.topicId,g.id);
+        const subBadge = subTitle
+          ? '<span class="px-2 py-1 rounded-full text-xs bg-indigo-50 text-indigo-700 whitespace-nowrap">'+subTitle+'</span>'
+          : '';
+
         card.innerHTML =
           '<div class="flex items-start justify-between gap-3">'+
             '<div class="min-w-0">'+
@@ -721,42 +837,60 @@
           '</div>'+
           '<div class="mt-3 space-y-3 hidden" data-body></div>';
 
-        const body = card.querySelector('[data-body]');
+        const body      = card.querySelector('[data-body]');
         const toggleBtn = card.querySelector('[data-toggle]');
-        toggleBtn.onclick=function(){
+
+        toggleBtn.onclick = ()=>{
           const expanded = toggleBtn.getAttribute('aria-expanded')==='true';
           toggleBtn.setAttribute('aria-expanded', String(!expanded));
           toggleBtn.textContent = expanded ? '▸' : '▾';
           body.classList.toggle('hidden', expanded);
 
-          if(!expanded && !body.dataset.mounted){
+          if (!expanded && !body.dataset.mounted){
             body.dataset.mounted='1';
-            (g.steps||[]).forEach(function(s,i){
-              const det=document.createElement('details'); det.className='rounded-xl border overflow-hidden'; det.open=i===0;
+            (g.steps||[]).forEach((s,i)=>{
+              const det = document.createElement('details');
+              det.className='rounded-xl border overflow-hidden';
+              det.open = i===0;
 
-              var linksHtml = '';
+              const mediaUrl = s.imgUrl || s.url || '';
+              let mediaHtml = '';
+              if (mediaUrl){
+                if (isVideo(mediaUrl, s.mediaType)){
+                  mediaHtml =
+                    '<video src="'+mediaUrl+'" class="w-full rounded" controls preload="metadata"></video>';
+                } else {
+                  mediaHtml =
+                    '<img src="'+mediaUrl+'" class="thumb w-full cursor-zoom-in rounded" alt="Passo '+(i+1)+'">';
+                }
+              }
+
+              let linksHtml = '';
               if (Array.isArray(s.links) && s.links.length){
-                const items = s.links.map(function(u){
+                const items = s.links.map(u=>{
                   const safe = normalizeUrl(u);
                   return '<li><a class="text-indigo-700 hover:underline" href="'+safe+'" target="_blank" rel="noopener noreferrer">'+safe+'</a></li>';
                 }).join('');
-                linksHtml = '<div class="pt-1"><div class="text-xs text-gray-500 mb-1">Links úteis</div><ul class="list-disc pl-6 text-sm">'+items+'</ul></div>';
+                linksHtml =
+                  '<div class="pt-1"><div class="text-xs text-gray-500 mb-1">Links úteis</div><ul class="list-disc pl-6 text-sm">'+items+'</ul></div>';
               }
 
-              var mediaHtml = buildMediaHtml(s.imgUrl, i);
-              var descHtml = s.desc ? '<div class="prose prose-sm max-w-none">'+s.desc+'</div>' : '';
+              const descHtml = s.desc
+                ? '<div class="prose prose-sm max-w-none">'+s.desc+'</div>'
+                : '';
+
               det.innerHTML =
                 '<summary class="cursor-pointer select-none flex items-center gap-2 px-3 py-2 bg-gray-50 text-gray-900">'+
                   '<span class="inline-flex items-center justify-center h-6 px-2 text-xs font-semibold rounded-full bg-gray-800 text-white">Passo '+(i+1)+'</span>'+
                   '<span class="font-medium">'+(s.title||'Sem título')+'</span>'+
                 '</summary>'+
-                '<div class="p-3 space-y-3">'+ mediaHtml + descHtml + linksHtml +'</div>';
+                '<div class="p-3 space-y-3">'+mediaHtml+descHtml+linksHtml+'</div>';
 
-              const img = det.querySelector('img.thumb');
-              if(img){
-                img.onclick=function(){
-                  $('#imgViewer').src=s.imgUrl;
-                  openModal($('#imgModal'),true);
+              const img = det.querySelector('img');
+              if (img){
+                img.onclick = ()=>{
+                  $('#imgViewer').src = mediaUrl;
+                  openModal($('#imgModal'), true);
                 };
               }
               body.appendChild(det);
@@ -764,44 +898,62 @@
           }
         };
 
-        card.querySelector('[data-edit]').onclick=function(){openEditor(g.id);};
-        card.querySelector('[data-del]').onclick=function(ev){
-          ev.preventDefault(); ev.stopPropagation();
-          if(confirm('Excluir este guia?')){
-            const db = readDB().filter(function(x){return x.id!==g.id;});
+        card.querySelector('[data-edit]').onclick = ()=>openEditor(g.id);
+
+        card.querySelector('[data-del]').onclick = ev=>{
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (confirm('Excluir este guia?')){
+            const db = readDB().filter(x=>x.id!==g.id);
             writeDB(db);
-            const subs=readSubs();
-            Object.keys(subs).forEach(function(tid){
-              subs[tid]=(subs[tid]||[]).filter(function(s){return s.guideId!==g.id;});
+            const subs = readSubs();
+            Object.keys(subs).forEach(tid=>{
+              subs[tid] = (subs[tid]||[]).filter(s=>s.guideId!==g.id);
             });
             writeSubs(subs);
-            const fav=readFav(); fav.guides=(fav.guides||[]).filter(function(id){return id!==g.id;}); writeFav(fav);
-            renderTopic(); renderSubsInSidebar();
+            const fv = readFav();
+            fv.guides = (fv.guides||[]).filter(id=>id!==g.id);
+            writeFav(fv);
+            renderTopic();
+            renderSubsInSidebar();
           }
         };
-        card.querySelector('[data-star]').onclick=function(){
-          const fv=readFav(); fv.guides=fv.guides||[];
-          const idx=fv.guides.indexOf(g.id);
-          if(idx>=0) fv.guides.splice(idx,1); else fv.guides.push(g.id);
-          writeFav(fv); renderGuides();
+
+        card.querySelector('[data-star]').onclick = ()=>{
+          const fv = readFav();
+          fv.guides = fv.guides || [];
+          const idx = fv.guides.indexOf(g.id);
+          if (idx>=0) fv.guides.splice(idx,1);
+          else        fv.guides.push(g.id);
+          writeFav(fv);
+          renderGuides();
         };
 
         guidesEl.appendChild(card);
       });
     }
 
-    /* ===== Modal Guia / Quill ===== */
-    const guideModal=$('#guideModal'), imgModal=$('#imgModal'), stepsWrap=$('#stepsWrap');
-    const btnAddStep=$('#btnAddStep'), btnClose=$('#closeGuide'), closeImg=$('#closeImg');
-    const btnDeleteGuide=$('#btnDeleteGuide'), form=$('#guideForm'), modTitle=$('#modalTitle');
-    const createSub=$('[name="create_sub"]'), subFields=$('#subFields'), subTitleInput=$('[name="sub_title"]'), subDescInput=$('[name="sub_desc"]');
+    /* ===== Modal Guia / Quill + vídeo ===== */
+    const guideModal  = $('#guideModal');
+    const imgModal    = $('#imgModal');
+    const stepsWrap   = $('#stepsWrap');
+    const btnAddStep  = $('#btnAddStep');
+    const btnClose    = $('#closeGuide');
+    const closeImg    = $('#closeImg');
+    const btnDeleteGuide = $('#btnDeleteGuide');
+    const form        = $('#guideForm');
+    const modTitle    = $('#modalTitle');
+    const createSub   = $('[name="create_sub"]');
+    const subFields   = $('#subFields');
+    const subTitleInput = $('[name="sub_title"]');
+    const subDescInput  = $('[name="sub_desc"]');
 
-    if(createSub){
-      createSub.onchange=function(){
+    if (createSub){
+      createSub.onchange = ()=>{
         subFields.classList.toggle('hidden', !createSub.checked);
-        if(createSub.checked && subTitleInput){
-          if(!subTitleInput.value || !subTitleInput.value.trim()){
-            subTitleInput.value = (form && form.title) ? form.title.value : '';
+        if (createSub.checked && subTitleInput){
+          if (!subTitleInput.value || !subTitleInput.value.trim()){
+            subTitleInput.value = form && form.title ? form.title.value : '';
           }
         }
       };
@@ -812,125 +964,200 @@
       wrap.className='quill-wrap';
       const tpl = document.getElementById('quill-toolbar-template');
       const toolbar = tpl.content.firstElementChild.cloneNode(true);
-      const editor = document.createElement('div'); editor.className='quill-editor bg-white';
-      wrap.appendChild(toolbar); wrap.appendChild(editor);
-      const q = new Quill(editor,{ theme:'snow', modules:{ toolbar: toolbar } });
-      if(initialHtml) q.root.innerHTML=initialHtml;
+      const editor  = document.createElement('div');
+      editor.className='quill-editor bg-white';
+      wrap.appendChild(toolbar);
+      wrap.appendChild(editor);
+      const q = new Quill(editor,{ theme:'snow', modules:{ toolbar } });
+      if (initialHtml) q.root.innerHTML = initialHtml;
       holder.appendChild(wrap);
       return q;
     }
 
-    function addStep(title='',desc='',url='',linksArr=[]){
-      const d=document.createElement('div'); d.className='border rounded-xl p-3 space-y-2';
+    function addStep(title='', desc='', url='', linksArr=[], mediaType=''){
+      const d = document.createElement('div');
+      d.className='border rounded-xl p-3 space-y-2';
       d.innerHTML =
         '<div class="grid sm:grid-cols-2 gap-3">'+
           '<div><label class="text-sm text-gray-600">Título do passo</label><input class="w-full border rounded-lg px-3 py-2" name="st_title" value="'+(title||'')+'"></div>'+
-          '<div><label class="text-sm text-gray-600">Imagem ou vídeo do passo</label><input type="file" accept="image/*,video/*" class="w-full border rounded-lg px-3 py-2" name="st_file"></div>'+
+          '<div>'+
+            '<label class="text-sm text-gray-600">Imagem/Vídeo do passo</label>'+
+            '<input type="file" accept="image/*,video/*" class="w-full border rounded-lg px-3 py-2" name="st_file">'+
+            '<input type="hidden" name="st_mediaType" value="'+(mediaType||'')+'">'+
+          '</div>'+
         '</div>'+
-        '<div><label class="text-sm text-gray-600">URL da imagem/vídeo</label><input class="w-full border rounded-lg px-3 py-2" name="st_url" value="'+(url||'')+'" placeholder="https://..."></div>'+
+        '<div><label class="text-sm text-gray-600">URL da imagem/vídeo</label><input class="w-full border rounded-lg px-3 py-2" name="st_url" value="'+(url||'')+'" placeholder="https://... (Drive, Loom, YouTube, MP4, etc.)"></div>'+
         '<div><label class="text-sm text-gray-600">Links úteis (um por linha)</label><textarea class="w-full border rounded-lg px-3 py-2" rows="3" name="st_links">'+(Array.isArray(linksArr)?linksArr.join('\n'):'')+'</textarea></div>'+
         '<div><label class="text-sm text-gray-600">Descrição / instruções</label><div data-quill-holder></div></div>'+
         '<div class="flex justify-end"><button type="button" class="btn btn-ghost text-red-600 border-red-200 hover:bg-red-50" name="st_remove">Remover passo</button></div>';
-      d.querySelector('[name="st_remove"]').onclick=function(){d.remove();};
+      d.querySelector('[name="st_remove"]').onclick = ()=>d.remove();
       const holder = d.querySelector('[data-quill-holder]');
       initQuill(holder, desc||'');
       stepsWrap.appendChild(d);
     }
 
     function openEditor(id=null){
-      editingId=id; stepsWrap.innerHTML=''; form.reset(); form.updated.value=nowFmt();
-      if(createSub){ createSub.checked=false; subFields.classList.add('hidden'); }
-      if(subTitleInput){ subTitleInput.value=''; } if(subDescInput){ subDescInput.value=''; }
-      if(id){
-        const g=readDB().find(function(x){return x.id===id;});
-        modTitle.textContent='Editar guia'; btnDeleteGuide.classList.remove('hidden');
-        form.title.value=g.title; form.author.value=g.author; form.role.value=g.role; form.updated.value=g.updated;
-        (g.steps||[]).forEach(function(st){addStep(st.title,st.desc,st.imgUrl || st.url,st.links||[]);});
-      }else{
-        modTitle.textContent='Adicionar guia'; btnDeleteGuide.classList.add('hidden'); addStep(); addStep();
+      editingId = id;
+      stepsWrap.innerHTML='';
+      form.reset();
+      form.updated.value = nowFmt();
+      if (createSub){
+        createSub.checked=false;
+        subFields.classList.add('hidden');
+      }
+      if (subTitleInput) subTitleInput.value='';
+      if (subDescInput)  subDescInput.value='';
+
+      if (id){
+        const g = readDB().find(x=>x.id===id);
+        if (!g) return;
+        modTitle.textContent='Editar guia';
+        btnDeleteGuide.classList.remove('hidden');
+        form.title.value   = g.title;
+        form.author.value  = g.author;
+        form.role.value    = g.role;
+        form.updated.value = g.updated;
+        (g.steps||[]).forEach(st=>{
+          addStep(st.title, st.desc, st.imgUrl || st.url || '', st.links || [], st.mediaType || '');
+        });
+      } else {
+        modTitle.textContent='Adicionar guia';
+        btnDeleteGuide.classList.add('hidden');
+        addStep();
+        addStep();
       }
       openModal(guideModal,true);
     }
 
-    $('#btnAdd').onclick=function(){openEditor();};
-    btnAddStep.onclick=function(){addStep();};
-    btnClose.onclick=function(){openModal(guideModal,false);};
-    closeImg.onclick=function(){openModal(imgModal,false);};
-    imgModal.onclick=function(e){if(e.target===imgModal)openModal(imgModal,false);};
+    $('#btnAdd').onclick   = ()=>openEditor();
+    btnAddStep.onclick     = ()=>addStep();
+    btnClose.onclick       = ()=>openModal(guideModal,false);
+    closeImg.onclick       = ()=>openModal(imgModal,false);
+    imgModal.onclick       = e=>{ if (e.target===imgModal) openModal(imgModal,false); };
 
-    form.onsubmit=async function(e){
+    form.onsubmit = async e=>{
       e.preventDefault();
-      const g={ id:editingId||uuid(), topicId:currentTopic, title:form.title.value, author:form.author.value, role:form.role.value, updated:nowFmt(), steps:[] };
-      const rows=$$('#stepsWrap>div');
-      for(const row of rows){
+      const g = {
+        id: editingId || uuid(),
+        topicId: currentTopic,
+        title:   form.title.value,
+        author:  form.author.value,
+        role:    form.role.value,
+        updated: nowFmt(),
+        steps:   []
+      };
+      const rows = $$('#stepsWrap>div');
+      for (const row of rows){
         const descEditor = row.querySelector('.ql-editor');
-        const st={
-          title:row.querySelector('[name="st_title"]').value,
-          desc:descEditor?descEditor.innerHTML:'',
-          url:row.querySelector('[name="st_url"]').value
+        const urlInput   = row.querySelector('[name="st_url"]');
+        const fileInput  = row.querySelector('[name="st_file"]');
+        const mediaHidden= row.querySelector('[name="st_mediaType"]');
+        const linksInput = row.querySelector('[name="st_links"]');
+
+        const title = row.querySelector('[name="st_title"]').value;
+        const url   = urlInput ? urlInput.value : '';
+        let   mediaType = mediaHidden ? mediaHidden.value : '';
+        let   imgUrl    = '';
+
+        const file = fileInput && fileInput.files[0];
+        if (file){
+          mediaType = file.type || mediaType;
+          imgUrl = await fileToBase64(file);
+        } else if (url){
+          imgUrl = normalizeUrl(url);
+        }
+
+        const st = {
+          title,
+          desc:  descEditor ? descEditor.innerHTML : '',
+          url,
+          imgUrl,
+          mediaType,
+          links: parseLinks(linksInput ? linksInput.value : '')
         };
-        const file=row.querySelector('[name="st_file"]').files[0];
-        st.imgUrl = file ? await fileToBase64(file) : st.url;
-        st.links = parseLinks(row.querySelector('[name="st_links"]').value);
         g.steps.push(st);
       }
-      const db=readDB(); const i=db.findIndex(function(x){return x.id===g.id;}); if(i>=0)db[i]=g; else db.unshift(g); writeDB(db);
 
-      if(createSub && createSub.checked){
-        const subTitleVal=(subTitleInput && subTitleInput.value ? subTitleInput.value.trim() : '') || g.title;
-        const all=readSubs(); const arr=all[currentTopic]||[]; arr.push({title:subTitleVal, desc:(subDescInput && subDescInput.value ? subDescInput.value.trim() : ''), guideId:g.id}); all[currentTopic]=arr; writeSubs(all); renderSubsInSidebar();
+      const db = readDB();
+      const i  = db.findIndex(x=>x.id===g.id);
+      if (i>=0) db[i]=g;
+      else      db.unshift(g);
+      writeDB(db);
+
+      if (createSub && createSub.checked){
+        const subTitleVal =
+          (subTitleInput && subTitleInput.value ? subTitleInput.value.trim() : '') || g.title;
+        const all = readSubs();
+        const arr = all[currentTopic] || [];
+        arr.push({
+          title: subTitleVal,
+          desc:  subDescInput && subDescInput.value ? subDescInput.value.trim() : '',
+          guideId: g.id
+        });
+        all[currentTopic] = arr;
+        writeSubs(all);
+        renderSubsInSidebar();
       }
-      openModal(guideModal,false); renderTopic();
+
+      openModal(guideModal,false);
+      renderTopic();
     };
 
-    btnDeleteGuide.onclick=function(){
-      if(!editingId) return;
-      if(confirm('Excluir este guia?')){
-        const db = readDB().filter(function(x){return x.id!==editingId;});
+    btnDeleteGuide.onclick = ()=>{
+      if (!editingId) return;
+      if (confirm('Excluir este guia?')){
+        const db = readDB().filter(x=>x.id!==editingId);
         writeDB(db);
-        const subs=readSubs();
-        Object.keys(subs).forEach(function(tid){
-          subs[tid]=(subs[tid]||[]).filter(function(s){return s.guideId!==editingId;});
+        const subs = readSubs();
+        Object.keys(subs).forEach(tid=>{
+          subs[tid] = (subs[tid]||[]).filter(s=>s.guideId!==editingId);
         });
         writeSubs(subs);
-        const fav=readFav(); fav.guides=(fav.guides||[]).filter(function(id){return id!==editingId;}); writeFav(fav);
-        openModal(guideModal,false); editingId=null; renderTopic(); renderSubsInSidebar();
+        const fav = readFav();
+        fav.guides = (fav.guides||[]).filter(id=>id!==editingId);
+        writeFav(fav);
+        openModal(guideModal,false);
+        editingId=null;
+        renderTopic();
+        renderSubsInSidebar();
       }
     };
 
     /* ===== Ausências & Backups (UI) ===== */
     function mountAbsencesUI(){
-      const form = $('#absForm');
+      const formAbs = $('#absForm');
       const inpP = $('#absPrincipal');
       const inpB = $('#absBackups');
       const inpS = $('#absStart');
       const inpE = $('#absEnd');
       const list = $('#absList');
-      const btn = $('#absSave');
+      const btn  = $('#absSave');
       const btnCancel = $('#absCancelEdit');
 
       const actsWrap = $('#absActs');
-      const inpNew = $('#absNewAct');
-      const btnAdd = $('#absAddAct');
-      const btnManage = $('#absManageAct');
+      const inpNew   = $('#absNewAct');
+      const btnAdd   = $('#absAddAct');
+      const btnManage= $('#absManageAct');
 
       const actModal = $('#actModal');
-      const actList = $('#actList');
+      const actList  = $('#actList');
       const closeAct = $('#closeAct');
 
       let editingIndex = null;
 
       function renderActs(){
         const acts = readActs();
-        actsWrap.innerHTML = '';
+        actsWrap.innerHTML='';
         acts.forEach(act=>{
           const id = 'act_'+act.replace(/\s+/g,'_').toLowerCase();
           const chip = document.createElement('label');
-          chip.className = 'inline-flex items-center gap-2 px-3 py-1 border rounded-full text-sm cursor-pointer bg-white hover:bg-indigo-50';
-          chip.innerHTML = '<input type="checkbox" class="h-4 w-4" data-act="'+act+'" id="'+id+'"><span>'+act+'</span>';
+          chip.className='inline-flex items-center gap-2 px-3 py-1 border rounded-full text-sm cursor-pointer bg-white hover:bg-indigo-50';
+          chip.innerHTML =
+            '<input type="checkbox" class="h-4 w-4" data-act="'+act+'" id="'+id+'"><span>'+act+'</span>';
           actsWrap.appendChild(chip);
         });
       }
+
       function getSelectedActs(){
         return [...actsWrap.querySelectorAll('input[type="checkbox"]')]
           .filter(i=>i.checked)
@@ -945,37 +1172,42 @@
 
       btnAdd.onclick = ()=>{
         const val = (inpNew.value||'').trim();
-        if(!val) { inpNew.focus(); return; }
+        if (!val){ inpNew.focus(); return; }
         const saved = getSavedActs();
-        if(!saved.includes(val)){
-          saved.push(val); writeActs(saved);
+        if (!saved.includes(val)){
+          saved.push(val);
+          writeActs(saved);
           renderActs();
         }
         const input = actsWrap.querySelector('input[data-act="'+CSS.escape(val)+'"]');
-        if(input) input.checked = true;
+        if (input) input.checked = true;
         inpNew.value='';
       };
 
-      function resetForm(){
+      function resetFormAbs(){
         inpP.value=''; inpB.value=''; inpS.value=''; inpE.value='';
         setSelectedActs([]);
-        editingIndex = null;
-        btn.textContent = 'Salvar';
+        editingIndex=null;
+        btn.textContent='Salvar';
         btnCancel.classList.add('hidden');
       }
 
       function renderList(){
         const data = readAbs();
-        list.innerHTML = '';
-        if(!data.length){
-          list.innerHTML = '<p class="text-gray-500">Nenhum registro cadastrado.</p>';
+        list.innerHTML='';
+        if (!data.length){
+          list.innerHTML='<p class="text-gray-500">Nenhum registro cadastrado.</p>';
           return;
         }
-        data.forEach((row, idx)=>{
+        data.forEach((row,idx)=>{
           const card = document.createElement('div');
-          card.className = 'border rounded-lg p-3 flex items-start justify-between gap-3';
-          const tags = (row.activities||[]).map(a=>'<span class="px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700">'+a+'</span>').join(' ');
-          const period = (row.start||row.end) ? '<div class="text-xs text-gray-600 mt-1">Período: '+(row.start||'—')+' a '+(row.end||'—')+'</div>' : '';
+          card.className='border rounded-lg p-3 flex items-start justify-between gap-3';
+          const tags = (row.activities||[])
+            .map(a=>'<span class="px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700">'+a+'</span>')
+            .join(' ');
+          const period = (row.start||row.end)
+            ? '<div class="text-xs text-gray-600 mt-1">Período: '+(row.start||'—')+' a '+(row.end||'—')+'</div>'
+            : '';
           card.innerHTML =
             '<div class="min-w-0">'+
               '<div class="font-medium truncate">'+row.principal+'</div>'+
@@ -991,97 +1223,103 @@
 
           card.querySelector('[data-del]').onclick = ()=>{
             const arr = readAbs();
-            arr.splice(idx,1); writeAbs(arr); renderList();
-            if(editingIndex===idx) resetForm();
+            arr.splice(idx,1);
+            writeAbs(arr);
+            renderList();
+            if (editingIndex===idx) resetFormAbs();
           };
           card.querySelector('[data-edit]').onclick = ()=>{
             const r = readAbs()[idx];
-            inpP.value=r.principal||''; inpB.value=r.backups||'';
-            inpS.value=r.start||''; inpE.value=r.end||'';
+            inpP.value=r.principal||'';
+            inpB.value=r.backups||'';
+            inpS.value=r.start||'';
+            inpE.value=r.end||'';
             setSelectedActs(r.activities||[]);
-            editingIndex = idx;
-            btn.textContent = 'Atualizar';
+            editingIndex=idx;
+            btn.textContent='Atualizar';
             btnCancel.classList.remove('hidden');
-            window.scrollTo({top: form.getBoundingClientRect().top + window.scrollY - 80, behavior:'smooth'});
+            window.scrollTo({top: formAbs.getBoundingClientRect().top + window.scrollY - 80, behavior:'smooth'});
           };
+
           list.appendChild(card);
         });
       }
 
-      btnCancel.onclick = resetForm;
+      btnCancel.onclick = resetFormAbs;
 
-      btn.onclick = (e)=>{
+      btn.onclick = e=>{
         e.preventDefault();
         const principal = (inpP.value||'').trim();
-        const backups = (inpB.value||'').trim();
-        const start = (inpS.value||'').trim();
-        const end = (inpE.value||'').trim();
-        const activities = getSelectedActs();
-        if(!principal){ inpP.focus(); return; }
-        if(start && end && start > end){
+        const backups   = (inpB.value||'').trim();
+        const start     = (inpS.value||'').trim();
+        const end       = (inpE.value||'').trim();
+        const activities= getSelectedActs();
+        if (!principal){ inpP.focus(); return; }
+        if (start && end && start > end){
           alert('Data inicial não pode ser maior que a final.');
           return;
         }
         const arr = readAbs();
-        const payload = {principal, backups, start, end, activities, updated: nowFmt()};
-        if(editingIndex!==null){ arr[editingIndex] = payload; } else { arr.unshift(payload); }
+        const payload = {principal,backups,start,end,activities,updated:nowFmt()};
+        if (editingIndex!==null) arr[editingIndex]=payload;
+        else                     arr.unshift(payload);
         writeAbs(arr);
-        resetForm();
+        resetFormAbs();
         renderList();
       };
 
       function openActManager(){
-        const allActs = readActs();
+        const allActs  = readActs();
         const defaults = new Set(DEFAULT_ACTIVITIES);
-        actList.innerHTML = '';
+        actList.innerHTML='';
         allActs.forEach(act=>{
           const isDefault = defaults.has(act);
           const row = document.createElement('div');
-          row.className = 'border rounded-lg p-2 flex items-center gap-2';
+          row.className='border rounded-lg p-2 flex items-center gap-2';
           row.innerHTML =
             '<input class="flex-1 border rounded px-2 py-1 '+(isDefault?'bg-gray-50':'')+'" '+(isDefault?'disabled':'')+' value="'+act+'">'+
             (isDefault
               ? '<span class="text-xs text-gray-500 px-2">🔒 padrão</span>'
               : '<div class="flex gap-2"><button class="btn btn-ghost" data-save>Salvar</button><button class="btn btn-danger" data-del>Excluir</button></div>'
             );
-          if(!isDefault){
+          if (!isDefault){
             const input = row.querySelector('input');
             row.querySelector('[data-save]').onclick = ()=>{
               const newName = (input.value||'').trim();
-              if(!newName){ input.focus(); return; }
-              const currentSaved = getSavedActs();
+              if (!newName){ input.focus(); return; }
               const exists = readActs().some(a=>a!==act && a.toLowerCase()===newName.toLowerCase());
-              if(exists){ alert('Já existe uma atividade com esse nome.'); return; }
+              if (exists){ alert('Já existe uma atividade com esse nome.'); return; }
+              const currentSaved = getSavedActs();
               const idx = currentSaved.indexOf(act);
-              if(idx>=0){ currentSaved[idx]=newName; writeActs(currentSaved); }
+              if (idx>=0) currentSaved[idx]=newName;
+              writeActs(currentSaved);
               const regs = readAbs().map(r=>{
-                const arr = (r.activities||[]).map(a=> a===act ? newName : a );
+                const arr = (r.activities||[]).map(a=> a===act ? newName : a);
                 return {...r, activities: arr};
               });
               writeAbs(regs);
-              renderActs(); renderList();
-              openActManager();
+              renderActs(); renderList(); openActManager();
             };
             row.querySelector('[data-del]').onclick = ()=>{
-              if(!confirm('Remover esta atividade? Ela também será removida dos registros.')) return;
+              if (!confirm('Remover esta atividade? Ela também será removida dos registros.')) return;
               const currentSaved = getSavedActs().filter(a=>a!==act);
               writeActs(currentSaved);
               const regs = readAbs().map(r=>{
-                const arr = (r.activities||[]).filter(a=> a!==act );
+                const arr = (r.activities||[]).filter(a=> a!==act);
                 return {...r, activities: arr};
               });
               writeAbs(regs);
-              renderActs(); renderList();
-              openActManager();
+              renderActs(); renderList(); openActManager();
             };
           }
           actList.appendChild(row);
         });
         openModal(actModal,true);
       }
+
       btnManage.onclick = openActManager;
-      closeAct.onclick = ()=>openModal(actModal,false);
-      actModal.onclick = (e)=>{ if(e.target===actModal) openModal(actModal,false); };
+      closeAct.onclick  = ()=>openModal(actModal,false);
+      actModal.onclick  = e=>{ if (e.target===actModal) openModal(actModal,false); };
 
       renderActs();
       renderList();
@@ -1091,39 +1329,37 @@
     function search(q){
       q=q.trim().toLowerCase();
       const out=[];
-      Object.entries(TOPICS).forEach(function([id,t]){
-        if((t.title||'').toLowerCase().includes(q)||(t.desc||'').toLowerCase().includes(q)){
-          out.push({type:'topic',id:id,title:t.title,desc:t.desc});
+      Object.entries(TOPICS).forEach(([id,t])=>{
+        if ((t.title||'').toLowerCase().includes(q) || (t.desc||'').toLowerCase().includes(q)){
+          out.push({type:'topic',id,title:t.title,desc:t.desc});
         }
       });
-      readDB().forEach(function(g){
-        if(g.title.toLowerCase().includes(q)){
+      readDB().forEach(g=>{
+        if (g.title.toLowerCase().includes(q)){
           out.push({type:'guide',id:g.id,topicId:g.topicId,title:g.title,desc:'Guia em '+(TOPICS[g.topicId]?.title||g.topicId)});
         }
       });
       return out;
     }
 
-    const qInput = $('#q');
+    const qInput     = $('#q');
     const searchWrap = $('#searchRes');
 
     function renderSearchResults(){
-      const q = qInput.value;
+      const q   = qInput.value;
       const res = search(q);
-      const wrap = searchWrap;
-      wrap.innerHTML = '';
-
-      if(!q.trim()){
-        wrap.innerHTML = '<p class="text-gray-500">Digite algo para pesquisar.</p>';
+      const wrap= searchWrap;
+      wrap.innerHTML='';
+      if (!q.trim()){
+        wrap.innerHTML='<p class="text-gray-500">Digite algo para pesquisar.</p>';
         return;
       }
-      if(!res.length){
-        wrap.innerHTML = '<p class="text-gray-500">Nada encontrado.</p>';
+      if (!res.length){
+        wrap.innerHTML='<p class="text-gray-500">Nada encontrado.</p>';
         return;
       }
-
-      res.forEach(function(r){
-        const d=document.createElement('div');
+      res.forEach(r=>{
+        const d = document.createElement('div');
         d.className='border rounded-lg p-3';
         d.innerHTML =
           '<div class="text-sm '+(r.type==='topic'?'text-indigo-600':'text-green-700')+'">'+
@@ -1132,9 +1368,8 @@
           '<div class="font-semibold">'+r.title+'</div>'+
           '<div class="text-gray-600 text-sm">'+(r.desc||'')+'</div>'+
           '<div class="mt-2"><button class="btn btn-ghost" data-open>Abrir</button></div>';
-
-        d.querySelector('[data-open]').onclick=function(){
-          if(r.type==='topic'){
+        d.querySelector('[data-open]').onclick = ()=>{
+          if (r.type==='topic'){
             currentTopic=r.id;
             setTab('content');
             renderTopic();
@@ -1149,29 +1384,68 @@
       });
     }
 
-    // botão Buscar
-    $('#doSearch').onclick = function(){
-      renderSearchResults();
-    };
-
-    // busca "ao vivo" enquanto digita
-    qInput.addEventListener('input', function(){
-      renderSearchResults();
-    });
-
-    // Enter no campo também busca
-    qInput.addEventListener('keydown', function(e){
-      if(e.key === 'Enter'){
+    $('#doSearch').onclick = ()=>renderSearchResults();
+    qInput.addEventListener('input', ()=>renderSearchResults());
+    qInput.addEventListener('keydown', e=>{
+      if (e.key==='Enter'){
         e.preventDefault();
         renderSearchResults();
       }
     });
 
     function renderFavs(){
-      const fav=readFav(); const wrap=$('#favList'); wrap.innerHTML=''; if(!fav.topics.length && !fav.guides.length){ wrap.innerHTML='<p class="text-gray-500">Você ainda não adicionou favoritos.</p>'; return; }
-      if(fav.topics.length){ const box=document.createElement('div'); box.className='border rounded-xl p-4'; box.innerHTML='<div class="font-semibold mb-2">Tópicos</div>'; fav.topics.forEach(function(id){ const t=TOPICS[id]; if(!t) return; const a=document.createElement('a'); a.href='#'; a.className='block link hover:underline'; a.textContent=t.title; a.onclick=function(e){e.preventDefault();currentTopic=id;setTab('content');renderTopic();}; box.appendChild(a); }); wrap.appendChild(box); }
-      if(fav.guides.length){ const box=document.createElement('div'); box.className='border rounded-xl p-4'; box.innerHTML='<div class="font-semibold mb-2">Guias</div>'; fav.guides.forEach(function(id){ const g=readDB().find(function(x){return x.id===id;}); if(!g) return; const btn=document.createElement('button'); btn.className='block link hover:underline text-left'; btn.textContent=g.title+' — '+(TOPICS[g.topicId]?.title||g.topicId); btn.onclick=function(){currentTopic=g.topicId;setTab('content');renderTopic();focusGuide(g.id);}; box.appendChild(btn); }); wrap.appendChild(box); }
+      const fav = readFav();
+      const wrap= $('#favList');
+      wrap.innerHTML='';
+      if (!fav.topics.length && !fav.guides.length){
+        wrap.innerHTML='<p class="text-gray-500">Você ainda não adicionou favoritos.</p>';
+        return;
+      }
+      if (fav.topics.length){
+        const box = document.createElement('div');
+        box.className='border rounded-xl p-4';
+        box.innerHTML='<div class="font-semibold mb-2">Tópicos</div>';
+        fav.topics.forEach(id=>{
+          const t = TOPICS[id];
+          if (!t) return;
+          const a = document.createElement('a');
+          a.href='#';
+          a.className='block link hover:underline';
+          a.textContent=t.title;
+          a.onclick = e=>{
+            e.preventDefault();
+            currentTopic=id;
+            setTab('content');
+            renderTopic();
+          };
+          box.appendChild(a);
+        });
+        wrap.appendChild(box);
+      }
+      if (fav.guides.length){
+        const box = document.createElement('div');
+        box.className='border rounded-xl p-4';
+        box.innerHTML='<div class="font-semibold mb-2">Guias</div>';
+        fav.guides.forEach(id=>{
+          const g = readDB().find(x=>x.id===id);
+          if (!g) return;
+          const btn = document.createElement('button');
+          btn.className='block link hover:underline text-left';
+          btn.textContent = g.title+' — '+(TOPICS[g.topicId]?.title||g.topicId);
+          btn.onclick = ()=>{
+            currentTopic=g.topicId;
+            setTab('content');
+            renderTopic();
+            focusGuide(g.id);
+          };
+          box.appendChild(btn);
+        });
+        wrap.appendChild(box);
+      }
     }
+
+    // carrega dados compartilhados do Worker
+    loadRemote();
   </script>
 </body>
 </html>
