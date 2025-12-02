@@ -58,6 +58,8 @@
       <button class="px-3 py-2 rounded-lg hover:bg-gray-100" data-tab="index">Índice</button>
       <button class="px-3 py-2 rounded-lg hover:bg-gray-100" data-tab="search">Pesquisar</button>
       <button class="px-3 py-2 rounded-lg hover:bg-gray-100" data-tab="favs">Favoritos</button>
+      <!-- NOVO: aba Lixeira -->
+      <button class="px-3 py-2 rounded-lg hover:bg-gray-100" data-tab="trash">Lixeira</button>
     </div>
 
     <!-- PAINEL: CONTEÚDO -->
@@ -250,6 +252,16 @@
     <!-- PAINEL: FAVORITOS -->
     <section id="tab-favs" class="hidden">
       <div id="favList" class="space-y-3"></div>
+    </section>
+
+    <!-- PAINEL: LIXEIRA -->
+    <section id="tab-trash" class="hidden">
+      <div class="max-w-3xl">
+        <p class="text-sm text-gray-600 mb-3">
+          Aqui ficam os guias excluídos. Eles não aparecem mais no conteúdo, mas ficam registrados para histórico.
+        </p>
+        <div id="trashList" class="space-y-3"></div>
+      </div>
     </section>
   </div>
 
@@ -448,7 +460,7 @@
               <label class="text-sm text-gray-600">Atividades cobertas</label>
               <div id="absActs" class="flex flex-wrap gap-2 mt-2"></div>
 
-              <div class="flex flex-wrap items-center gap-2 mt-3">
+              <div class="flex flex-wrap itens-center gap-2 mt-3">
                 <input id="absNewAct" class="flex-1 min-w-[240px] border rounded-lg px-3 py-2" placeholder="Adicionar atividade (ex.: Neoway)" />
                 <button id="absAddAct" type="button" class="btn btn-ghost">+ Adicionar</button>
                 <button id="absManageAct" type="button" class="btn btn-ghost">⚙️ Gerenciar atividades</button>
@@ -477,23 +489,26 @@
       guides: [],
       subs: {},
       absences: [],
-      acts: []
+      acts: [],
+      deletedGuides: [] // Lixeira de guias
     };
 
     function applyRemoteState(data) {
       if (!data || typeof data !== 'object') return;
-      STATE.guides   = Array.isArray(data.guides)   ? data.guides   : [];
-      STATE.subs     = data.subs     || {};
-      STATE.absences = Array.isArray(data.absences) ? data.absences : [];
-      STATE.acts     = Array.isArray(data.acts)     ? data.acts     : [];
+      STATE.guides        = Array.isArray(data.guides)        ? data.guides        : [];
+      STATE.subs          = data.subs     || {};
+      STATE.absences      = Array.isArray(data.absences)      ? data.absences      : [];
+      STATE.acts          = Array.isArray(data.acts)          ? data.acts          : [];
+      STATE.deletedGuides = Array.isArray(data.deletedGuides) ? data.deletedGuides : [];
     }
 
     function saveRemote() {
       const payload = {
-        guides:   STATE.guides   || [],
-        subs:     STATE.subs     || {},
-        absences: STATE.absences || [],
-        acts:     STATE.acts     || []
+        guides:        STATE.guides        || [],
+        subs:          STATE.subs          || {},
+        absences:      STATE.absences      || [],
+        acts:          STATE.acts          || [],
+        deletedGuides: STATE.deletedGuides || []
       };
       fetch(API_URL, {
         method: 'PUT',
@@ -571,6 +586,9 @@
       return Array.from(set).sort((a,b)=>a.localeCompare(b,'pt-BR'));
     };
 
+    const readTrash  = () => STATE.deletedGuides || [];
+    const writeTrash = arr => { STATE.deletedGuides = arr || []; saveRemote(); };
+
     function cleanupOrphanSubtitles(){
       const ids = new Set(readDB().map(g=>g.id));
       const subs = readSubs();
@@ -595,7 +613,8 @@
       content: $('#tab-content'),
       index:   $('#tab-index'),
       search:  $('#tab-search'),
-      favs:    $('#tab-favs')
+      favs:    $('#tab-favs'),
+      trash:   $('#tab-trash')
     };
 
     function setTab(name){
@@ -603,7 +622,8 @@
       Object.entries(tabsPanes).forEach(([k,p])=>{
         if (p) p.classList.toggle('hidden', k!==name);
       });
-      if (name==='favs') renderFavs();
+      if (name==='favs')  renderFavs();
+      if (name==='trash') renderTrash();
     }
     tabsBtns.forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
     setTab('content');
@@ -772,6 +792,7 @@
     };
 
     /* ===== Guias ===== */
+
     function getSubtitleForGuide(topicId, guideId){
       const arr = readSubs()[topicId] || [];
       const s = arr.find(x=>x.guideId===guideId);
@@ -801,6 +822,74 @@
       return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url||'');
     }
 
+    // Excluir guia -> move para lixeira
+    function deleteGuideById(guideId){
+      const db = readDB();
+      const idx = db.findIndex(x=>x.id===guideId);
+      if (idx === -1) return;
+      const g = db[idx];
+
+      const deletedAt = nowFmt();
+      const hist = Array.isArray(g.history) ? g.history.slice() : [];
+      hist.push({
+        ts: deletedAt,
+        author: g.author || '—',
+        action: 'excluído'
+      });
+
+      const trashItem = {
+        ...g,
+        history: hist,
+        deletedAt
+      };
+
+      const trash = readTrash();
+      writeTrash([trashItem, ...trash]); // mais recente primeiro
+
+      db.splice(idx,1);
+      writeDB(db);
+
+      // limpar subtítulos e favoritos relacionados
+      const subs = readSubs();
+      Object.keys(subs).forEach(tid=>{
+        subs[tid] = (subs[tid]||[]).filter(s=>s.guideId!==guideId);
+      });
+      writeSubs(subs);
+
+      const fav = readFav();
+      fav.guides = (fav.guides||[]).filter(id=>id!==guideId);
+      writeFav(fav);
+    }
+
+    // Restaurar guia da lixeira
+    function restoreGuideById(guideId){
+      const trash = readTrash();
+      const idx = trash.findIndex(x=>x.id===guideId);
+      if (idx === -1) return;
+      const item = trash[idx];
+
+      const restoredAt = nowFmt();
+      const hist = Array.isArray(item.history) ? item.history.slice() : [];
+      hist.push({
+        ts: restoredAt,
+        author: item.author || '—',
+        action: 'restaurado'
+      });
+
+      const guide = {
+        ...item,
+        history: hist
+      };
+      delete guide.deletedAt;
+
+      const db = readDB();
+      db.unshift(guide);
+      writeDB(db);
+
+      trash.splice(idx,1);
+      writeTrash(trash);
+    }
+
     function renderGuides(){
       const guides = readDB().filter(g=>g.topicId===currentTopic);
       guidesEl.innerHTML='';
@@ -824,21 +913,47 @@
           '<div class="flex items-start justify-between gap-3">'+
             '<div class="min-w-0">'+
               '<div class="font-semibold truncate">'+g.title+'</div>'+
-              '<div class="text-xs text-gray-500">Por '+g.author+' — '+(g.role||'-')+'</div>'+
-              '<div class="text-xs text-gray-400">Atualizado em '+g.updated+'</div>'+
+              '<div class="text-xs text-gray-500">Por '+(g.author||'-')+' — '+(g.role||'-')+'</div>'+
+              '<div class="text-xs text-gray-400">Atualizado em '+(g.updated||'-')+'</div>'+
             '</div>'+
             '<div class="flex items-center gap-2 shrink-0">'+
               subBadge+
               '<button class="btn btn-ghost" data-toggle aria-expanded="false" title="Mostrar passos">▸</button>'+
               '<button class="btn btn-ghost" data-star title="Favoritar">'+(fOn?'★':'☆')+'</button>'+
+              '<button class="btn btn-ghost" data-history title="Ver histórico">Histórico</button>'+
               '<button class="btn btn-ghost" data-edit>Editar</button>'+
               '<button class="btn btn-danger" data-del>Excluir</button>'+
             '</div>'+
           '</div>'+
+          '<div class="mt-2 hidden text-xs text-gray-600 space-y-0.5" data-history-body></div>'+
           '<div class="mt-3 space-y-3 hidden" data-body></div>';
 
-        const body      = card.querySelector('[data-body]');
-        const toggleBtn = card.querySelector('[data-toggle]');
+        const body        = card.querySelector('[data-body]');
+        const toggleBtn   = card.querySelector('[data-toggle]');
+        const historyBtn  = card.querySelector('[data-history]');
+        const historyBody = card.querySelector('[data-history-body]');
+
+        // Preenche histórico do guia
+        historyBody.innerHTML = '';
+        if (Array.isArray(g.history) && g.history.length){
+          g.history.forEach(h=>{
+            const line = document.createElement('div');
+            line.textContent = (h.ts||'-')+' — '+(h.author||'-')+' — '+(h.action||'atualização');
+            historyBody.appendChild(line);
+          });
+        } else {
+          const line = document.createElement('div');
+          line.textContent = 'Sem histórico registrado.';
+          historyBody.appendChild(line);
+        }
+
+        if (historyBtn){
+          historyBtn.onclick = ()=>{
+            const hidden = historyBody.classList.contains('hidden');
+            historyBody.classList.toggle('hidden', !hidden);
+            historyBtn.textContent = hidden ? 'Ocultar histórico' : 'Histórico';
+          };
+        }
 
         toggleBtn.onclick = ()=>{
           const expanded = toggleBtn.getAttribute('aria-expanded')==='true';
@@ -903,17 +1018,8 @@
         card.querySelector('[data-del]').onclick = ev=>{
           ev.preventDefault();
           ev.stopPropagation();
-          if (confirm('Excluir este guia?')){
-            const db = readDB().filter(x=>x.id!==g.id);
-            writeDB(db);
-            const subs = readSubs();
-            Object.keys(subs).forEach(tid=>{
-              subs[tid] = (subs[tid]||[]).filter(s=>s.guideId!==g.id);
-            });
-            writeSubs(subs);
-            const fv = readFav();
-            fv.guides = (fv.guides||[]).filter(id=>id!==g.id);
-            writeFav(fv);
+          if (confirm('Excluir este guia? Ele será removido do conteúdo e registrado na Lixeira.')){
+            deleteGuideById(g.id);
             renderTopic();
             renderSubsInSidebar();
           }
@@ -1044,7 +1150,8 @@
         author:  form.author.value,
         role:    form.role.value,
         updated: nowFmt(),
-        steps:   []
+        steps:   [],
+        history: []
       };
       const rows = $$('#stepsWrap>div');
       for (const row of rows){
@@ -1079,9 +1186,26 @@
       }
 
       const db = readDB();
-      const i  = db.findIndex(x=>x.id===g.id);
-      if (i>=0) db[i]=g;
-      else      db.unshift(g);
+      const existingIdx = db.findIndex(x=>x.id===g.id);
+
+      if (existingIdx >= 0){
+        const old = db[existingIdx];
+        const hist = Array.isArray(old.history) ? old.history.slice() : [];
+        hist.push({
+          ts: g.updated,
+          author: g.author || '—',
+          action: 'atualizado'
+        });
+        g.history = hist;
+        db[existingIdx] = g;
+      } else {
+        g.history = [{
+          ts: g.updated,
+          author: g.author || '—',
+          action: 'criado'
+        }];
+        db.unshift(g);
+      }
       writeDB(db);
 
       if (createSub && createSub.checked){
@@ -1105,17 +1229,8 @@
 
     btnDeleteGuide.onclick = ()=>{
       if (!editingId) return;
-      if (confirm('Excluir este guia?')){
-        const db = readDB().filter(x=>x.id!==editingId);
-        writeDB(db);
-        const subs = readSubs();
-        Object.keys(subs).forEach(tid=>{
-          subs[tid] = (subs[tid]||[]).filter(s=>s.guideId!==editingId);
-        });
-        writeSubs(subs);
-        const fav = readFav();
-        fav.guides = (fav.guides||[]).filter(id=>id!==editingId);
-        writeFav(fav);
+      if (confirm('Excluir este guia? Ele será removido do conteúdo e registrado na Lixeira.')){
+        deleteGuideById(editingId);
         openModal(guideModal,false);
         editingId=null;
         renderTopic();
@@ -1325,7 +1440,7 @@
       renderList();
     }
 
-    /* ===== Busca / Favoritos ===== */
+    /* ===== Busca / Favoritos / Lixeira ===== */
     function search(q){
       q=q.trim().toLowerCase();
       const out=[];
@@ -1444,8 +1559,70 @@
       }
     }
 
+    function renderTrash(){
+      const wrap = $('#trashList');
+      if (!wrap) return;
+      const items = readTrash();
+      wrap.innerHTML='';
+      if (!items.length){
+        wrap.innerHTML='<p class="text-gray-500">Nenhum guia excluído até agora.</p>';
+        return;
+      }
+      items.forEach(item=>{
+        const t = TOPICS[item.topicId] || {};
+        const card = document.createElement('div');
+        card.className='border rounded-xl p-3 flex flex-col gap-1';
+        const lastHist = Array.isArray(item.history) && item.history.length
+          ? item.history[item.history.length - 1]
+          : null;
+        const deletedInfo = item.deletedAt || (lastHist && lastHist.ts) || '';
+        card.innerHTML =
+          '<div class="flex justify-between items-start gap-2">'+
+            '<div class="min-w-0">'+
+              '<div class="font-semibold">'+(item.title||'Sem título')+'</div>'+
+              '<div class="text-xs text-gray-500">Tópico: '+(t.title||item.topicId||'-')+'</div>'+
+              '<div class="text-xs text-gray-500">Autor original: '+(item.author||'-')+'</div>'+
+            '</div>'+
+            '<span class="px-2 py-1 rounded-full text-[11px] bg-red-50 text-red-700">Excluído</span>'+
+          '</div>'+
+          '<div class="text-xs text-gray-400">Excluído em: '+(deletedInfo||'-')+'</div>'+
+          '<div class="mt-1 flex justify-end">'+
+            '<button class="btn btn-ghost text-xs" data-restore>Restaurar</button>'+
+          '</div>'+
+          (Array.isArray(item.history) && item.history.length
+            ? '<details class="mt-1 text-xs text-gray-600"><summary class="cursor-pointer select-none">Ver histórico deste guia</summary><div class="mt-1 space-y-0.5" data-trash-history></div></details>'
+            : '');
+
+        const histContainer = card.querySelector('[data-trash-history]');
+        if (histContainer && Array.isArray(item.history)){
+          item.history.forEach(h=>{
+            const line = document.createElement('div');
+            line.textContent = (h.ts||'-')+' — '+(h.author||'-')+' — '+(h.action||'atualização');
+            histContainer.appendChild(line);
+          });
+        }
+
+        const restoreBtn = card.querySelector('[data-restore]');
+        if (restoreBtn){
+          restoreBtn.onclick = ()=>{
+            if (confirm('Restaurar este guia? Ele voltará para o tópico original.')){
+              restoreGuideById(item.id);
+              renderTrash();
+              // Se você estiver no mesmo tópico, recarrega os guias
+              if (currentTopic === item.topicId){
+                renderTopic();
+              }
+            }
+          };
+        }
+
+        wrap.appendChild(card);
+      });
+    }
+
     // carrega dados compartilhados do Worker
     loadRemote();
   </script>
 </body>
 </html>
+
