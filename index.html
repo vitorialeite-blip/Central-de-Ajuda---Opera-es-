@@ -24,6 +24,7 @@
     .sidebar-btn{display:flex;width:100%;align-items:center;justify-content:space-between;gap:.5rem;padding:.75rem 1rem;border-radius:.75rem}
     .sidebar-item{display:block;padding:.6rem 1rem;border-radius:.6rem}
     .sidebar-item.active{background:#eef2ff;color:#4338ca}
+    .thumb{max-height:260px;object-fit:contain}
     .modal-backdrop{background:rgba(0,0,0,.45)}
     .link{color:#4338ca}
     .topic-html h2{font-size:1.25rem;font-weight:700;margin-bottom:.25rem}
@@ -41,10 +42,9 @@
     .prose :where(code){ background:#f4f4f5; padding:.1rem .35rem; border-radius:.35rem; font-family:ui-monospace,Menlo,Consolas,monospace;}
     .prose pre{ background:#0b1220; color:#e5e7eb; padding:1rem; border-radius:.5rem; overflow:auto; }
     .prose h1,.prose h2,.prose h3{ font-weight:700; }
-    .prose img{ max-width:100%; height:auto; border-radius:.75rem; }
+    .prose img{ max-width:100%; height:auto; border-radius:.75rem; cursor: zoom-in; }
   </style>
 </head>
-
 <body class="bg-white text-gray-900">
   <header class="winbar text-white">
     <div class="max-w-7xl mx-auto h-14 px-4 sm:px-6 lg:px-8 flex items-center gap-3">
@@ -54,7 +54,7 @@
   </header>
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-    <div class="flex gap-2 text-sm mb-4">
+    <div class="flex flex-wrap gap-2 text-sm mb-4">
       <button class="px-3 py-2 rounded-lg tab-on" data-tab="content">Conteúdo</button>
       <button class="px-3 py-2 rounded-lg hover:bg-gray-100" data-tab="index">Índice</button>
       <button class="px-3 py-2 rounded-lg hover:bg-gray-100" data-tab="search">Pesquisar</button>
@@ -67,6 +67,7 @@
       <!-- Sidebar -->
       <aside class="col-span-12 md:col-span-4 lg:col-span-3">
         <div class="space-y-3">
+
           <div class="border rounded-xl">
             <button class="sidebar-btn w-full font-medium hover:bg-gray-50" data-acc="intro">
               <span class="flex items-center gap-2">📘 Introdução</span>
@@ -143,7 +144,7 @@
               <div class="pl-2" data-subs-for="ctrl-visao"></div>
               <a class="sidebar-item hover:bg-gray-50" href="#" data-topic="estruturas-dados">Estruturas de dados</a>
               <div class="pl-2" data-subs-for="estruturas-dados"></div>
-              <a class="sidebar-item hover:bg-gray-50" href="#" data-topic="modelagens-automacoes">Modelagens e automações de processos</a>
+              <a class="sidebar-item hover:bg-gray-50" href="#" data-topic="modelagens-automacoes">Modelagens e automações</a>
               <div class="pl-2" data-subs-for="modelagens-automacoes"></div>
             </div>
           </div>
@@ -165,21 +166,27 @@
       <!-- Coluna principal -->
       <section class="col-span-12 md:col-span-8 lg:col-span-9">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div><h1 id="topicTitle" class="text-xl font-semibold">Credenciamento</h1></div>
+          <div>
+            <h1 id="topicTitle" class="text-xl font-semibold">Credenciamento</h1>
+          </div>
           <div class="flex gap-2">
             <button class="btn btn-ghost" id="btnFav">☆ Favoritar tópico</button>
             <button class="btn btn-primary" id="btnAdd">+ Adicionar guia</button>
           </div>
         </div>
+
         <div class="border-b my-3"></div>
-        <p id="topicDesc" class="text-gray-700 mb-6">
-          Credenciamento — Criação/ativação de conta, gateways, adquirentes, VP.
-        </p>
+
+        <p id="topicDesc" class="text-gray-700 mb-6">Credenciamento — Criação/ativação de conta.</p>
 
         <div id="topicHtml" class="topic-html hidden mb-8"></div>
 
         <h2 id="guidesTitle" class="text-lg font-semibold mb-3">Guias da equipe</h2>
         <div id="guides" class="space-y-4"></div>
+
+        <p class="text-xs text-gray-500 mt-6">
+          Atalho: pressione <b>S</b> para editar subtítulos do tópico atual.
+        </p>
       </section>
     </section>
 
@@ -219,7 +226,7 @@
             <li><a class="link hover:underline" data-jump="proc-analise">Processo de Análise</a></li>
             <li><a class="link hover:underline" data-jump="monitoramentos">Monitoramentos</a></li>
             <li><a class="link hover:underline" data-jump="alertas-pos">Alertas POS</a></li>
-            <li><a class="link hover:underline" data-jump="fraude-recebiveis">Recebíveis</a></li>
+            <li><a class="link hover:underline" data-jump="fraude-recebiveis">Recebíveis (Fraude)</a></li>
           </ul>
         </div>
         <div class="border rounded-xl p-4">
@@ -227,7 +234,7 @@
           <ul class="space-y-1">
             <li><a class="link hover:underline" data-jump="ctrl-visao">Visão geral</a></li>
             <li><a class="link hover:underline" data-jump="estruturas-dados">Estruturas de dados</a></li>
-            <li><a class="link hover:underline" data-jump="modelagens-automacoes">Modelagens e automações de processos</a></li>
+            <li><a class="link hover:underline" data-jump="modelagens-automacoes">Modelagens e automações</a></li>
           </ul>
         </div>
         <div class="border rounded-xl p-4">
@@ -241,9 +248,9 @@
 
     <!-- PAINEL: PESQUISAR -->
     <section id="tab-search" class="hidden">
-      <div class="max-w-2xl">
+      <div class="max-w-3xl">
         <div class="flex gap-2 mb-3">
-          <input id="q" class="flex-1 border rounded-lg px-3 py-2" placeholder="Busque por tópico ou guia..." />
+          <input id="q" class="flex-1 border rounded-lg px-3 py-2" placeholder="Busque por tópico, guia ou texto..." />
           <button id="doSearch" class="btn btn-primary">Buscar</button>
         </div>
         <div id="searchRes" class="space-y-3"></div>
@@ -259,8 +266,12 @@
     <section id="tab-trash" class="hidden">
       <div class="max-w-3xl">
         <p class="text-sm text-gray-600 mb-3">
-          Aqui ficam os guias excluídos. Eles não aparecem mais no conteúdo, mas ficam registrados para histórico.
+          Guias excluídos ficam aqui. Você pode restaurar ou apagar de vez.
         </p>
+        <div class="flex gap-2 mb-3">
+          <button id="btnPurgeTrash" class="btn btn-danger">Esvaziar lixeira</button>
+          <button id="btnRefreshTrash" class="btn btn-ghost">Atualizar</button>
+        </div>
         <div id="trashList" class="space-y-3"></div>
       </div>
     </section>
@@ -273,7 +284,7 @@
       <h3 class="text-lg font-semibold mb-4">Subtítulos de <span id="subTopicName"></span></h3>
 
       <form id="subForm" class="space-y-3 overflow-y-auto max-h-[70vh] pr-1">
-        <div class="text-sm text-gray-600 -mt-2">Cada subtítulo pode apontar para <b>qualquer guia</b> deste tópico (atalho: pressione <b>S</b>).</div>
+        <div class="text-sm text-gray-600 -mt-2">Cada subtítulo pode apontar para <b>qualquer guia</b> deste tópico.</div>
         <div id="subList" class="space-y-3"></div>
         <div class="flex justify-between items-center pt-2">
           <button type="button" id="btnAddSubRow" class="btn btn-ghost">+ Adicionar subtítulo</button>
@@ -283,7 +294,7 @@
     </div>
   </div>
 
-  <!-- TEMPLATE BARRA QUILL -->
+  <!-- TEMPLATE BARRA QUILL (COM IMAGEM) -->
   <template id="quill-toolbar-template">
     <div class="ql-toolbar ql-snow quill-toolbar px-2 py-1 flex flex-wrap gap-1">
       <select class="ql-header">
@@ -363,7 +374,7 @@
         </div>
 
         <div class="flex items-center justify-between pt-2">
-          <span class="text-xs text-gray-500">Dica: adicione imagens direto na <b>Descrição</b> (botão 🖼️ no editor) e inclua links úteis do passo.</span>
+          <span class="text-xs text-gray-500">Imagens ficam dentro da <b>Descrição</b> (botão 🖼️), então no editar elas continuam lá.</span>
           <div class="flex gap-2">
             <button type="button" id="btnDeleteGuide" class="btn btn-danger hidden">Excluir guia</button>
             <button class="btn btn-primary" type="submit">Salvar</button>
@@ -373,34 +384,56 @@
     </div>
   </div>
 
+  <!-- MODAL: Visualizar Imagem -->
+  <div id="imgModal" class="fixed inset-0 hidden items-center justify-center modal-backdrop z-50">
+    <div class="bg-white rounded-xl p-2 max-w-3xl w-[95%] card relative">
+      <button id="closeImg" class="absolute right-3 top-3 text-gray-500 hover:text-gray-700">✕</button>
+      <img id="imgViewer" class="w-full h-[70vh] object-contain rounded-lg" src="" alt="Imagem do passo" />
+    </div>
+  </div>
+
   <!-- MODAL: Gerenciar atividades -->
   <div id="actModal" class="fixed inset-0 hidden items-center justify-center modal-backdrop z-50">
     <div class="bg-white rounded-xl w-full max-w-2xl p-6 card relative max-h-[90vh] overflow-hidden">
       <button id="closeAct" class="absolute right-4 top-4 text-gray-500 hover:text-gray-700">✕</button>
       <h3 class="text-lg font-semibold mb-3">Gerenciar atividades</h3>
-      <p class="text-sm text-gray-600 mb-3">Você pode <b>renomear</b> ou <b>excluir</b> as atividades que adicionou. As atividades padrão ficam bloqueadas.</p>
+      <p class="text-sm text-gray-600 mb-3">Renomeie ou exclua atividades que você adicionou. As padrão ficam bloqueadas.</p>
       <div id="actList" class="space-y-2 overflow-y-auto max-h-[65vh] pr-1"></div>
     </div>
   </div>
 
   <script>
-    /* ===== Polyfills ===== */
+    /* ===== Polyfills/Helpers ===== */
     function uuid() {
-      try {
-        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-      } catch (e) {}
+      try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) {}
       return 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
     }
     if (typeof window.CSS === 'undefined') window.CSS = {};
     if (typeof window.CSS.escape !== 'function') {
-      window.CSS.escape = function (s) {
-        return String(s).replace(/[^a-zA-Z0-9_\-]/g, '\\$&');
-      };
+      window.CSS.escape = function (s) { return String(s).replace(/[^a-zA-Z0-9_\\-]/g, '\\\\$&'); };
     }
+    const $  = (s,p=document)=>p.querySelector(s);
+    const $$ = (s,p=document)=>[...p.querySelectorAll(s)];
+    const nowFmt = ()=>new Date().toLocaleString('pt-BR');
+    const openModal=(el,v)=>{el.classList.toggle('hidden',!v);el.classList.toggle('flex',v);};
+
+    // Não normalize base64 (data:) nem blob:
+    const normalizeUrl = u => {
+      u = (u||'').trim();
+      if (!u) return '';
+      if (/^(data:|blob:)/i.test(u)) return u;
+      if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+      return u;
+    };
+    const parseLinks = raw =>
+      (raw||'')
+        .split(/\r?\n|,|;/)
+        .map(v=>normalizeUrl(v))
+        .filter(v=>v && /^https?:\/\//i.test(v));
 
     /* ====== Tópicos ====== */
     const TOPICS = {
-      'intro-sobre': { title:'Sobre esta central', desc:'', html:'<h2>Bem-vindo 👋</h2><p>Use <b>Favoritos</b> para marcar o que você consulta com frequência.</p>' },
+      'intro-sobre': { title:'Sobre esta central', desc:'', html:'<h2>Bem-vindo 👋</h2><p>Use <b>Favoritos</b> para marcar o que você consulta com frequência.</p><p>Dica: nas guias, insira imagens direto na descrição (🖼️) para elas não sumirem ao editar.</p>' },
       'intro-visao': { title:'Gestão de Operações e Risco — visão', desc:'', html:'<h2>Visão concentrada</h2><p>Menu em árvore à esquerda e leitura à direita.</p>' },
       credenciamento:{title:'Credenciamento',desc:'Credenciamento — Criação/ativação de conta, gateways, adquirentes, VP.'},
       descredenciamento:{title:'Descredenciamento',desc:'Encerramento/ajustes de contas e adequações.'},
@@ -419,7 +452,6 @@
       'ctrl-visao':{title:'Controles & Processos — Visão',desc:'Acompanhamento e indicadores.'},
       'estruturas-dados':{title:'Estruturas de dados',desc:'Dicionários e schemas.'},
       'modelagens-automacoes':{title:'Modelagens e automações de processos',desc:'Fluxos e integrações.'},
-
       ausencias:{
         title:'Ausências & Backups',
         desc:'',
@@ -490,13 +522,21 @@
     function applyRemoteState(data) {
       if (!data || typeof data !== 'object') return;
       STATE.guides        = Array.isArray(data.guides)        ? data.guides        : [];
-      STATE.subs          = data.subs     || {};
+      STATE.subs          = data.subs || {};
       STATE.absences      = Array.isArray(data.absences)      ? data.absences      : [];
       STATE.acts          = Array.isArray(data.acts)          ? data.acts          : [];
       STATE.deletedGuides = Array.isArray(data.deletedGuides) ? data.deletedGuides : [];
     }
 
-    function saveRemote() {
+    let __saveTimer = null;
+
+    function scheduleSaveRemote() {
+      if (__saveTimer) clearTimeout(__saveTimer);
+      __saveTimer = setTimeout(doSaveRemote, 250); // debounce evita corrida (race)
+    }
+
+    function doSaveRemote() {
+      __saveTimer = null;
       const payload = {
         guides:        STATE.guides        || [],
         subs:          STATE.subs          || {},
@@ -521,82 +561,59 @@
           console.warn('Erro HTTP ao carregar base remota', res.status);
         }
       } catch (e) {
-        console.warn('Não foi possível carregar base remota, usando vazio', e);
+        console.warn('Não foi possível carregar base remota (usando vazio)', e);
       }
       cleanupOrphanSubtitles();
       renderTopic();
       renderSubsInSidebar();
     }
 
-    /* ===== Helpers ===== */
-    const $  = (s,p=document)=>p.querySelector(s);
-    const $$ = (s,p=document)=>[...p.querySelectorAll(s)];
-    const nowFmt   = ()=>new Date().toLocaleString('pt-BR');
-    const openModal=(el,v)=>{el.classList.toggle('hidden',!v);el.classList.toggle('flex',v);};
-
-    const FAV_KEY = 'or_help_favs_v1';
-    const readFav = ()=>JSON.parse(localStorage.getItem(FAV_KEY)||'{"topics":[],"guides":[]}');
-    const writeFav= v => localStorage.setItem(FAV_KEY, JSON.stringify(v));
-
-    // === FIX: sem regex que quebra (resolve "Invalid regular expression flags") ===
-    function hasHttpProtocol(u){
-      return u.startsWith('http://') || u.startsWith('https://');
-    }
-    function normalizeUrl(u){
-      u = String(u || '').trim();
-      if (!u) return '';
-      if (!hasHttpProtocol(u)) u = 'https://' + u;
-      try { new URL(u); return u; } catch { return ''; }
-    }
-    function parseLinks(raw){
-      return String(raw || '')
-        .split(/[\r\n,;]+/)
-        .map(s => normalizeUrl(s))
-        .filter(Boolean);
-    }
+    /* ===== Storage (STATE) ===== */
+    const readDB    = () => STATE.guides   || [];
+    const writeDB   = a  => { STATE.guides   = a || []; scheduleSaveRemote(); };
+    const readSubs  = () => STATE.subs     || {};
+    const writeSubs = v  => { STATE.subs     = v || {}; scheduleSaveRemote(); };
+    const readAbs   = () => STATE.absences || [];
+    const writeAbs  = v  => { STATE.absences = v || []; scheduleSaveRemote(); };
+    const getSavedActs = () => STATE.acts || [];
+    const writeActs    = arr => { STATE.acts = arr || []; scheduleSaveRemote(); };
+    const readTrash  = () => STATE.deletedGuides || [];
+    const writeTrash = arr => { STATE.deletedGuides = arr || []; scheduleSaveRemote(); };
 
     const DEFAULT_ACTIVITIES = [
       'Credenciamento','Descredenciamento','1ª Venda (KYC)','Movimentações',
-      'Investigações','Recebiveis','Recebíveis','Disputa','Chargeback','Recuperação','Cobrança',
+      'Investigações','Recebíveis','Disputa','Chargeback','Recuperação','Cobrança',
       'Processo de Análise','Monitoramentos','Alertas POS','Recebíveis (Fraude)',
       'Estruturas de dados','Modelagens e automações de processos'
     ];
-
-    // DB compartilhado (STATE + Worker)
-    const readDB    = () => STATE.guides   || [];
-    const writeDB   = a  => { STATE.guides   = a || []; saveRemote(); };
-    const readSubs  = () => STATE.subs     || {};
-    const writeSubs = v  => { STATE.subs     = v || {}; saveRemote(); };
-    const readAbs   = () => STATE.absences || [];
-    const writeAbs  = v  => { STATE.absences = v || []; saveRemote(); };
-    const getSavedActs = () => STATE.acts || [];
-    const writeActs    = arr => { STATE.acts = arr || []; saveRemote(); };
-    const readActs     = () => {
+    const readActs = () => {
       const saved = getSavedActs();
       const set = new Set([...DEFAULT_ACTIVITIES, ...saved]);
       return Array.from(set).sort((a,b)=>a.localeCompare(b,'pt-BR'));
     };
 
-    const readTrash  = () => STATE.deletedGuides || [];
-    const writeTrash = arr => { STATE.deletedGuides = arr || []; saveRemote(); };
-
     function cleanupOrphanSubtitles(){
       const ids = new Set(readDB().map(g=>g.id));
       const subs = readSubs();
-      let changed = false;
-      Object.keys(subs).forEach(topicId=>{
-        const arr = subs[topicId] || [];
-        const filtered = arr.filter(s => !s.guideId || ids.has(s.guideId));
-        if (filtered.length !== arr.length) {
-          subs[topicId] = filtered;
-          changed = true;
-        }
+      let changed=false;
+      Object.keys(subs).forEach(tid=>{
+        const arr = subs[tid] || [];
+        const blocked = new Set(['disputa - fluxo de checklist']);
+        const filtered = arr.filter(s => {
+          if (!s) return false;
+          const t = String(s.title||'').trim().toLowerCase();
+          if (blocked.has(t)) return false;
+          return !s.guideId || ids.has(s.guideId);
+        });
+        if (filtered.length !== arr.length){ subs[tid]=filtered; changed=true; }
       });
       if (changed) writeSubs(subs);
     }
 
-    let currentTopic='credenciamento';
-    let editingId = null;
+    /* ===== Favoritos (local) ===== */
+    const FAV_KEY = 'or_help_favs_v1';
+    const readFav = ()=>JSON.parse(localStorage.getItem(FAV_KEY)||'{"topics":[],"guides":[]}');
+    const writeFav= v => localStorage.setItem(FAV_KEY, JSON.stringify(v));
 
     /* ===== Abas ===== */
     const tabsBtns = $$('[data-tab]');
@@ -607,7 +624,6 @@
       favs:    $('#tab-favs'),
       trash:   $('#tab-trash')
     };
-
     function setTab(name){
       tabsBtns.forEach(b=>b.classList.toggle('tab-on', b.dataset.tab===name));
       Object.entries(tabsPanes).forEach(([k,p])=>{
@@ -633,7 +649,19 @@
     }
     initAccordion();
 
-    /* ===== Tópico/Gerais ===== */
+    /* ===== Navegação Índice ===== */
+    $$('[data-jump]').forEach(a=>{
+      a.addEventListener('click', ()=>{
+        currentTopic = a.getAttribute('data-jump');
+        setTab('content');
+        renderTopic();
+      });
+    });
+
+    /* ===== Tópico atual ===== */
+    let currentTopic='credenciamento';
+    let editingId = null;
+
     const topicTitleEl = $('#topicTitle');
     const topicDescEl  = $('#topicDesc');
     const topicHtmlEl  = $('#topicHtml');
@@ -646,7 +674,8 @@
       const t = TOPICS[currentTopic] || {title:'Tópico',desc:''};
       topicTitleEl.textContent = t.title;
       topicDescEl.textContent  = t.desc || '';
-      $$('.sidebar-item').forEach(a=>a.classList.toggle('active', a.dataset.topic===currentTopic));
+      $$('.sidebar-item[data-topic]').forEach(a=>a.classList.toggle('active', a.dataset.topic===currentTopic));
+
       const fav = readFav();
       btnFav.textContent = fav.topics.includes(currentTopic)
         ? '★ Remover dos Favoritos'
@@ -660,7 +689,7 @@
         btnAdd.classList.add('hidden');
 
         if (currentTopic==='ausencias'){
-          try { mountAbsencesUI(); } catch(e){ console.error('Ausências UI error:', e); }
+          setTimeout(()=>{ try{ mountAbsencesUI(); }catch(e){ console.error(e);} }, 0);
         }
       } else {
         topicHtmlEl.classList.add('hidden');
@@ -689,12 +718,12 @@
     };
 
     /* ===== Subtítulos ===== */
-    const subModal    = $('#subModal');
-    const subTopicName= $('#subTopicName');
-    const subForm     = $('#subForm');
-    const subList     = $('#subList');
-    const btnAddSubRow= $('#btnAddSubRow');
-    const btnCloseSub = $('#closeSub');
+    const subModal      = $('#subModal');
+    const subTopicName  = $('#subTopicName');
+    const subForm       = $('#subForm');
+    const subList       = $('#subList');
+    const btnAddSubRow  = $('#btnAddSubRow');
+    const btnCloseSub   = $('#closeSub');
 
     function renderSubsInSidebar(){
       $$('[data-subs-for]').forEach(c=>{c.innerHTML='';});
@@ -724,17 +753,17 @@
     function addSubRow(title='', desc='', guideId=''){
       const guides = readDB().filter(g=>g.topicId===currentTopic);
       const options = ['<option value="">(sem vínculo)</option>'].concat(
-        guides.map(g=>'<option value="'+g.id+'" '+(g.id===guideId?'selected':'')+'>'+g.title+'</option>')
+        guides.map(g=>'<option value="'+g.id+'" '+(g.id===guideId?'selected':'')+'>'+escapeHtml(g.title)+'</option>')
       ).join('');
       const row = document.createElement('div');
       row.className='border rounded-xl p-3 space-y-2';
       row.innerHTML =
         '<div class="grid sm:grid-cols-2 gap-3">'+
-          '<div><label class="text-sm text-gray-600">Título do subtítulo</label><input class="w-full border rounded-lg px-3 py-2" value="'+(title||'')+'"></div>'+
+          '<div><label class="text-sm text-gray-600">Título do subtítulo</label><input class="w-full border rounded-lg px-3 py-2" value="'+escapeAttr(title||'')+'"></div>'+
           '<div><label class="text-sm text-gray-600">Aponta para (guia)</label><select class="w-full border rounded-lg px-3 py-2">'+options+'</select></div>'+
         '</div>'+
         '<div class="grid sm:grid-cols-2 gap-3">'+
-          '<div><label class="text-sm text-gray-600">Descrição (opcional)</label><textarea class="w-full border rounded-lg px-3 py-2" rows="2">'+(desc||'')+'</textarea></div>'+
+          '<div><label class="text-sm text-gray-600">Descrição (opcional)</label><textarea class="w-full border rounded-lg px-3 py-2" rows="2">'+escapeHtml(desc||'')+'</textarea></div>'+
           '<div class="flex items-end justify-end"><button type="button" class="btn btn-ghost text-red-600 border-red-200 hover:bg-red-50" data-remove>Remover</button></div>'+
         '</div>';
       row.querySelector('[data-remove]').onclick = ()=>row.remove();
@@ -756,9 +785,8 @@
     btnCloseSub.onclick  = ()=>openModal(subModal,false);
 
     document.addEventListener('keydown', e=>{
-      const tag = e.target.tagName.toLowerCase();
-      const isTyping =
-        tag==='input' || tag==='textarea' || tag==='select' || e.target.isContentEditable;
+      const tag = (e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '');
+      const isTyping = tag==='input' || tag==='textarea' || tag==='select' || e.target.isContentEditable;
       if (isTyping) return;
       if (e.key.toLowerCase()==='s' && !e.ctrlKey && !e.metaKey){
         e.preventDefault();
@@ -783,6 +811,9 @@
     };
 
     /* ===== Guias ===== */
+    function escapeHtml(str){ return String(str||'').replace(/[&<>"]/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[s])); }
+    function escapeAttr(str){ return escapeHtml(str).replace(/'/g,'&#39;'); }
+
     function getSubtitleForGuide(topicId, guideId){
       const arr = readSubs()[topicId] || [];
       const s = arr.find(x=>x.guideId===guideId);
@@ -807,11 +838,11 @@
       if (first) first.open = true;
     }
 
-    // Excluir guia -> move para lixeira
     function deleteGuideById(guideId){
       const db = readDB();
       const idx = db.findIndex(x=>x.id===guideId);
       if (idx === -1) return;
+
       const g = db[idx];
 
       const deletedAt = nowFmt();
@@ -820,24 +851,37 @@
 
       const trashItem = { ...g, history: hist, deletedAt };
       const trash = readTrash();
-      writeTrash([trashItem, ...trash]);
+      writeTrash([trashItem, ...trash]); // mais recente primeiro
 
+      // remove o guia do DB
       db.splice(idx,1);
       writeDB(db);
 
-      // limpar subtítulos e favoritos relacionados
+      // remove vínculos de subtítulo:
+      // 1) normal: subtítulo vinculado por guideId
+      // 2) fallback: se existir subtítulo antigo sem guideId, remove pelo mesmo título do guia
       const subs = readSubs();
+      const norm = v => String(v||'').trim().toLowerCase();
+      const gTitleNorm = norm(g.title);
+
       Object.keys(subs).forEach(tid=>{
-        subs[tid] = (subs[tid]||[]).filter(s=>s.guideId!==guideId);
+        subs[tid] = (subs[tid]||[]).filter(s=>{
+          if (s && s.guideId === guideId) return false;
+          if (s && !s.guideId && norm(s.title) === gTitleNorm) return false;
+          return true;
+        });
       });
       writeSubs(subs);
 
+      // garante limpeza de qualquer outro “órfão”
+      cleanupOrphanSubtitles();
+
+      // remove de favoritos (local)
       const fav = readFav();
       fav.guides = (fav.guides||[]).filter(id=>id!==guideId);
       writeFav(fav);
     }
 
-    // Restaurar guia da lixeira
     function restoreGuideById(guideId){
       const trash = readTrash();
       const idx = trash.findIndex(x=>x.id===guideId);
@@ -875,15 +919,15 @@
 
         const subTitle = getSubtitleForGuide(g.topicId,g.id);
         const subBadge = subTitle
-          ? '<span class="px-2 py-1 rounded-full text-xs bg-indigo-50 text-indigo-700 whitespace-nowrap">'+subTitle+'</span>'
+          ? '<span class="px-2 py-1 rounded-full text-xs bg-indigo-50 text-indigo-700 whitespace-nowrap">'+escapeHtml(subTitle)+'</span>'
           : '';
 
         card.innerHTML =
           '<div class="flex items-start justify-between gap-3">'+
             '<div class="min-w-0">'+
-              '<div class="font-semibold truncate">'+g.title+'</div>'+
-              '<div class="text-xs text-gray-500">Por '+(g.author||'-')+' — '+(g.role||'-')+'</div>'+
-              '<div class="text-xs text-gray-400">Atualizado em '+(g.updated||'-')+'</div>'+
+              '<div class="font-semibold truncate">'+escapeHtml(g.title)+'</div>'+
+              '<div class="text-xs text-gray-500">Por '+escapeHtml(g.author||'-')+' — '+escapeHtml(g.role||'-')+'</div>'+
+              '<div class="text-xs text-gray-400">Atualizado em '+escapeHtml(g.updated||'-')+'</div>'+
             '</div>'+
             '<div class="flex items-center gap-2 shrink-0">'+
               subBadge+
@@ -902,7 +946,6 @@
         const historyBtn  = card.querySelector('[data-history]');
         const historyBody = card.querySelector('[data-history-body]');
 
-        // Histórico
         historyBody.innerHTML = '';
         if (Array.isArray(g.history) && g.history.length){
           g.history.forEach(h=>{
@@ -916,13 +959,11 @@
           historyBody.appendChild(line);
         }
 
-        if (historyBtn){
-          historyBtn.onclick = ()=>{
-            const hidden = historyBody.classList.contains('hidden');
-            historyBody.classList.toggle('hidden', !hidden);
-            historyBtn.textContent = hidden ? 'Ocultar histórico' : 'Histórico';
-          };
-        }
+        historyBtn.onclick = ()=>{
+          const hidden = historyBody.classList.contains('hidden');
+          historyBody.classList.toggle('hidden', !hidden);
+          historyBtn.textContent = hidden ? 'Ocultar histórico' : 'Histórico';
+        };
 
         toggleBtn.onclick = ()=>{
           const expanded = toggleBtn.getAttribute('aria-expanded')==='true';
@@ -937,29 +978,36 @@
               det.className='rounded-xl border overflow-hidden';
               det.open = i===0;
 
+              const descHtml = s.desc || '';
               let linksHtml = '';
               if (Array.isArray(s.links) && s.links.length){
                 const items = s.links.map(u=>{
                   const safe = normalizeUrl(u);
-                  return safe
-                    ? '<li><a class="text-indigo-700 hover:underline" href="'+safe+'" target="_blank" rel="noopener noreferrer">'+safe+'</a></li>'
-                    : '';
+                  return '<li><a class="text-indigo-700 hover:underline" href="'+safe+'" target="_blank" rel="noopener noreferrer">'+safe+'</a></li>';
                 }).join('');
-                linksHtml = items
-                  ? '<div class="pt-1"><div class="text-xs text-gray-500 mb-1">Links úteis</div><ul class="list-disc pl-6 text-sm">'+items+'</ul></div>'
-                  : '';
+                linksHtml =
+                  '<div class="pt-1"><div class="text-xs text-gray-500 mb-1">Links úteis</div><ul class="list-disc pl-6 text-sm">'+items+'</ul></div>';
               }
-
-              const descHtml = s.desc
-                ? '<div class="prose prose-sm max-w-none">'+s.desc+'</div>'
-                : '';
 
               det.innerHTML =
                 '<summary class="cursor-pointer select-none flex items-center gap-2 px-3 py-2 bg-gray-50 text-gray-900">'+
                   '<span class="inline-flex items-center justify-center h-6 px-2 text-xs font-semibold rounded-full bg-gray-800 text-white">Passo '+(i+1)+'</span>'+
-                  '<span class="font-medium">'+(s.title||'Sem título')+'</span>'+
+                  '<span class="font-medium">'+escapeHtml(s.title||'Sem título')+'</span>'+
                 '</summary>'+
-                '<div class="p-3 space-y-3">'+descHtml+linksHtml+'</div>';
+                '<div class="p-3 space-y-3">'+
+                  (descHtml ? '<div class="prose prose-sm max-w-none">'+descHtml+'</div>' : '<div class="text-sm text-gray-500">Sem descrição.</div>')+
+                  linksHtml+
+                '</div>';
+
+              // Zoom: imagens dentro da descrição (Quill)
+              det.addEventListener('click', (ev)=>{
+                const target = ev.target;
+                if (target && target.tagName === 'IMG' && target.closest('.prose')){
+                  ev.preventDefault();
+                  $('#imgViewer').src = target.src;
+                  openModal($('#imgModal'), true);
+                }
+              });
 
               body.appendChild(det);
             });
@@ -968,10 +1016,10 @@
 
         card.querySelector('[data-edit]').onclick = ()=>openEditor(g.id);
 
-        card.querySelector('[data-del]').onclick = ev=>{
+        card.querySelector('[data-del]').onclick = (ev)=>{
           ev.preventDefault();
           ev.stopPropagation();
-          if (confirm('Excluir este guia? Ele será removido do conteúdo e registrado na Lixeira.')){
+          if (confirm('Excluir este guia? Ele vai para a Lixeira (com histórico).')){
             deleteGuideById(g.id);
             renderTopic();
             renderSubsInSidebar();
@@ -992,11 +1040,13 @@
       });
     }
 
-    /* ===== Modal Guia / Quill com IMAGEM EMBUTIDA ===== */
+    /* ===== Modal Guia / Quill + IMAGEM NA DESCRIÇÃO ===== */
     const guideModal  = $('#guideModal');
+    const imgModal    = $('#imgModal');
     const stepsWrap   = $('#stepsWrap');
     const btnAddStep  = $('#btnAddStep');
     const btnClose    = $('#closeGuide');
+    const closeImg    = $('#closeImg');
     const btnDeleteGuide = $('#btnDeleteGuide');
     const form        = $('#guideForm');
     const modTitle    = $('#modalTitle');
@@ -1004,6 +1054,13 @@
     const subFields   = $('#subFields');
     const subTitleInput = $('[name="sub_title"]');
     const subDescInput  = $('[name="sub_desc"]');
+
+    const fileToBase64 = f => new Promise((res,rej)=>{
+      const r = new FileReader();
+      r.onload = ()=>res(r.result);
+      r.onerror= rej;
+      r.readAsDataURL(f);
+    });
 
     if (createSub){
       createSub.onchange = ()=>{
@@ -1016,64 +1073,49 @@
       };
     }
 
-    function fileToBase64(file){
-      return new Promise((resolve,reject)=>{
-        const r = new FileReader();
-        r.onload = ()=>resolve(r.result);
-        r.onerror= reject;
-        r.readAsDataURL(file);
-      });
+    async function insertImageIntoQuill(quill){
+      const useUpload = confirm('Quer enviar uma imagem do computador?\\n\\nOK = Enviar arquivo\\nCancelar = Colar URL');
+      if (useUpload){
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async () => {
+          const file = input.files && input.files[0];
+          if (!file) return;
+          const dataUrl = await fileToBase64(file);
+          const range = quill.getSelection(true) || { index: quill.getLength() };
+          quill.insertEmbed(range.index, 'image', dataUrl, 'user');
+          quill.setSelection(range.index + 1, 0);
+        };
+        input.click();
+        return;
+      }
+
+      const url = prompt('Cole a URL da imagem (https://...):');
+      const safe = normalizeUrl(url || '');
+      if (!safe || !/^https?:\/\//i.test(safe)) return;
+
+      const range = quill.getSelection(true) || { index: quill.getLength() };
+      quill.insertEmbed(range.index, 'image', safe, 'user');
+      quill.setSelection(range.index + 1, 0);
     }
 
-    // Quill com handler de imagem (upload local -> base64)
     function initQuill(holder, initialHtml){
       const wrap = document.createElement('div');
       wrap.className='quill-wrap';
-
       const tpl = document.getElementById('quill-toolbar-template');
       const toolbar = tpl.content.firstElementChild.cloneNode(true);
-
       const editor  = document.createElement('div');
       editor.className='quill-editor bg-white';
-
       wrap.appendChild(toolbar);
       wrap.appendChild(editor);
-      holder.appendChild(wrap);
 
       const q = new Quill(editor,{ theme:'snow', modules:{ toolbar } });
-      if (initialHtml) q.root.innerHTML = initialHtml;
-
       const tb = q.getModule('toolbar');
-      if (tb){
-        tb.addHandler('image', async ()=>{
-          const input = document.createElement('input');
-          input.type = 'file';
-          input.accept = 'image/*';
-          input.onchange = async ()=>{
-            const file = input.files && input.files[0];
-            if (!file) return;
+      tb.addHandler('image', () => insertImageIntoQuill(q));
 
-            // limite simples (evita páginas gigantes)
-            const MAX_MB = 3;
-            if (file.size > MAX_MB * 1024 * 1024){
-              alert('Imagem muito grande. Tente uma imagem menor que ' + MAX_MB + 'MB.');
-              return;
-            }
-
-            try{
-              const b64 = await fileToBase64(file);
-              const range = q.getSelection(true) || { index: q.getLength(), length: 0 };
-              q.insertEmbed(range.index, 'image', b64, 'user');
-              q.setSelection(range.index + 1, 0);
-            } catch(e){
-              console.error('Erro ao inserir imagem', e);
-              alert('Não consegui inserir a imagem. Tente novamente.');
-            }
-          };
-          input.click();
-        });
-      }
-
+      if (initialHtml) q.root.innerHTML = initialHtml;
+      holder.appendChild(wrap);
       return q;
     }
 
@@ -1082,16 +1124,21 @@
       d.className='border rounded-xl p-3 space-y-2';
       d.innerHTML =
         '<div class="grid sm:grid-cols-2 gap-3">'+
-          '<div><label class="text-sm text-gray-600">Título do passo</label><input class="w-full border rounded-lg px-3 py-2" name="st_title" value="'+(title||'')+'"></div>'+
-          '<div><label class="text-sm text-gray-600">Links úteis (um por linha)</label><textarea class="w-full border rounded-lg px-3 py-2" rows="3" name="st_links">'+(Array.isArray(linksArr)?linksArr.join('\\n'):'')+'</textarea></div>'+
+          '<div>'+
+            '<label class="text-sm text-gray-600">Título do passo</label>'+
+            '<input class="w-full border rounded-lg px-3 py-2" name="st_title" value="'+escapeAttr(title||'')+'">'+
+          '</div>'+
+          '<div class="text-sm text-gray-500 flex items-end">'+
+            '<span>📌 Imagens: use o botão 🖼️ na <b>Descrição</b>.</span>'+
+          '</div>'+
         '</div>'+
-        '<div><label class="text-sm text-gray-600">Descrição / instruções (adicione imagens aqui 🖼️)</label><div data-quill-holder></div></div>'+
+        '<div><label class="text-sm text-gray-600">Links úteis (um por linha)</label><textarea class="w-full border rounded-lg px-3 py-2" rows="3" name="st_links">'+(Array.isArray(linksArr)?escapeHtml(linksArr.join("\\n")):"")+'</textarea></div>'+
+        '<div><label class="text-sm text-gray-600">Descrição / instruções</label><div data-quill-holder></div></div>'+
         '<div class="flex justify-end"><button type="button" class="btn btn-ghost text-red-600 border-red-200 hover:bg-red-50" name="st_remove">Remover passo</button></div>';
-      d.querySelector('[name="st_remove"]').onclick = ()=>d.remove();
 
+      d.querySelector('[name="st_remove"]').onclick = ()=>d.remove();
       const holder = d.querySelector('[data-quill-holder]');
       initQuill(holder, desc||'');
-
       stepsWrap.appendChild(d);
     }
 
@@ -1100,7 +1147,6 @@
       stepsWrap.innerHTML='';
       form.reset();
       form.updated.value = nowFmt();
-
       if (createSub){
         createSub.checked=false;
         subFields.classList.add('hidden');
@@ -1113,38 +1159,36 @@
         if (!g) return;
         modTitle.textContent='Editar guia';
         btnDeleteGuide.classList.remove('hidden');
-
         form.title.value   = g.title;
         form.author.value  = g.author;
         form.role.value    = g.role;
         form.updated.value = g.updated;
 
-        (g.steps||[]).forEach(st=>{
-          addStep(st.title, st.desc, st.links || []);
-        });
+        // Carrega passos com HTML já salvo (inclui imagens)
+        (g.steps||[]).forEach(st=> addStep(st.title||'', st.desc||'', st.links||[]) );
       } else {
         modTitle.textContent='Adicionar guia';
         btnDeleteGuide.classList.add('hidden');
         addStep();
         addStep();
       }
-
       openModal(guideModal,true);
     }
 
-    $('#btnAdd').onclick   = ()=>openEditor();
-    btnAddStep.onclick     = ()=>addStep();
-    btnClose.onclick       = ()=>openModal(guideModal,false);
+    $('#btnAdd').onclick = ()=>openEditor();
+    btnAddStep.onclick   = ()=>addStep();
+    btnClose.onclick     = ()=>openModal(guideModal,false);
+    closeImg.onclick     = ()=>openModal(imgModal,false);
+    imgModal.onclick     = e=>{ if (e.target===imgModal) openModal(imgModal,false); };
 
-    form.onsubmit = async e=>{
+    form.onsubmit = e=>{
       e.preventDefault();
-
       const g = {
         id: editingId || uuid(),
         topicId: currentTopic,
-        title:   form.title.value,
-        author:  form.author.value,
-        role:    form.role.value,
+        title:   form.title.value.trim(),
+        author:  form.author.value.trim(),
+        role:    form.role.value.trim(),
         updated: nowFmt(),
         steps:   [],
         history: []
@@ -1154,11 +1198,11 @@
       for (const row of rows){
         const descEditor = row.querySelector('.ql-editor');
         const linksInput = row.querySelector('[name="st_links"]');
-        const title = row.querySelector('[name="st_title"]').value;
-
+        const title      = row.querySelector('[name="st_title"]').value.trim();
+        const descHtml   = descEditor ? descEditor.innerHTML : '';
         const st = {
           title,
-          desc:  descEditor ? descEditor.innerHTML : '',
+          desc: descHtml,           // ✅ aqui ficam as imagens (data:... ou https://...)
           links: parseLinks(linksInput ? linksInput.value : '')
         };
         g.steps.push(st);
@@ -1180,11 +1224,11 @@
       writeDB(db);
 
       if (createSub && createSub.checked){
-        const subTitleVal =
-          (subTitleInput && subTitleInput.value ? subTitleInput.value.trim() : '') || g.title;
+        const subTitleVal = (subTitleInput && subTitleInput.value ? subTitleInput.value.trim() : '') || g.title;
         const all = readSubs();
         const arr = all[currentTopic] || [];
-        arr.push({ title: subTitleVal, desc: subDescInput && subDescInput.value ? subDescInput.value.trim() : '', guideId: g.id });
+        arr.push({ title: subTitleVal, desc: (subDescInput&&subDescInput.value?subDescInput.value.trim():''),
+          guideId: g.id });
         all[currentTopic] = arr;
         writeSubs(all);
         renderSubsInSidebar();
@@ -1196,7 +1240,7 @@
 
     btnDeleteGuide.onclick = ()=>{
       if (!editingId) return;
-      if (confirm('Excluir este guia? Ele será removido do conteúdo e registrado na Lixeira.')){
+      if (confirm('Excluir este guia? Ele vai para a Lixeira.')){
         deleteGuideById(editingId);
         openModal(guideModal,false);
         editingId=null;
@@ -1205,9 +1249,227 @@
       }
     };
 
-    /* ===== Ausências & Backups (UI) ===== */
+    /* ===== Pesquisar ===== */
+    const qInput = $('#q');
+    const doSearch = $('#doSearch');
+    const searchRes = $('#searchRes');
+
+    function stripHtml(html){
+      const div = document.createElement('div');
+      div.innerHTML = html || '';
+      return (div.textContent || div.innerText || '').trim();
+    }
+
+    function runSearch(){
+      const q = (qInput.value||'').trim().toLowerCase();
+      if (!q){
+        searchRes.innerHTML='<p class="text-gray-500">Digite algo para buscar.</p>';
+        return;
+      }
+
+      const out = [];
+
+      // Tópicos
+      Object.entries(TOPICS).forEach(([id,t])=>{
+        const hay = (t.title+' '+(t.desc||'')+' '+(t.html?stripHtml(t.html):'')).toLowerCase();
+        if (hay.includes(q)){
+          out.push({type:'topic', id, title:t.title, desc:t.desc||''});
+        }
+      });
+
+      // Guias
+      readDB().forEach(g=>{
+        const textSteps = (g.steps||[]).map(s=> (s.title||'')+' '+stripHtml(s.desc||'')+' '+(s.links||[]).join(' ')).join(' ');
+        const hay = (g.title+' '+(g.author||'')+' '+(g.role||'')+' '+textSteps).toLowerCase();
+        if (hay.includes(q)){
+          out.push({type:'guide', id:g.id, topicId:g.topicId, title:g.title, desc:'Tópico: '+(TOPICS[g.topicId]?.title||g.topicId)});
+        }
+      });
+
+      if (!out.length){
+        searchRes.innerHTML='<p class="text-gray-500">Nada encontrado.</p>';
+        return;
+      }
+
+      searchRes.innerHTML='';
+      out.slice(0,50).forEach(item=>{
+        const card = document.createElement('div');
+        card.className='border rounded-xl p-4 card';
+        card.innerHTML =
+          '<div class="font-semibold">'+escapeHtml(item.title)+'</div>'+
+          '<div class="text-sm text-gray-600">'+escapeHtml(item.desc||'')+'</div>'+
+          '<div class="mt-2"><button class="btn btn-ghost">Abrir</button></div>';
+        card.querySelector('button').onclick = ()=>{
+          if (item.type==='topic'){
+            currentTopic = item.id;
+            setTab('content');
+            renderTopic();
+          } else {
+            currentTopic = item.topicId;
+            setTab('content');
+            renderTopic();
+            setTimeout(()=>focusGuide(item.id), 80);
+          }
+        };
+        searchRes.appendChild(card);
+      });
+    }
+
+    doSearch.onclick = runSearch;
+    qInput.addEventListener('keydown', e=>{
+      if (e.key==='Enter'){ e.preventDefault(); runSearch(); }
+    });
+
+    /* ===== Favoritos ===== */
+    const favList = $('#favList');
+
+    function renderFavs(){
+      const fav = readFav();
+      favList.innerHTML='';
+
+      const topicCards = (fav.topics||[]).map(tid=>{
+        const t = TOPICS[tid];
+        if (!t) return null;
+        const el = document.createElement('div');
+        el.className='border rounded-xl p-4 card';
+        el.innerHTML =
+          '<div class="font-semibold">'+escapeHtml(t.title)+'</div>'+
+          '<div class="text-sm text-gray-600">'+escapeHtml(t.desc||'')+'</div>'+
+          '<div class="mt-2 flex gap-2">'+
+            '<button class="btn btn-ghost" data-open>Abrir</button>'+
+            '<button class="btn btn-danger" data-remove>Remover</button>'+
+          '</div>';
+        el.querySelector('[data-open]').onclick = ()=>{
+          currentTopic = tid;
+          setTab('content');
+          renderTopic();
+        };
+        el.querySelector('[data-remove]').onclick = ()=>{
+          const f = readFav();
+          f.topics = (f.topics||[]).filter(x=>x!==tid);
+          writeFav(f);
+          renderFavs();
+        };
+        return el;
+      }).filter(Boolean);
+
+      const guideCards = (fav.guides||[]).map(gid=>{
+        const g = readDB().find(x=>x.id===gid);
+        if (!g) return null;
+        const el = document.createElement('div');
+        el.className='border rounded-xl p-4 card';
+        el.innerHTML =
+          '<div class="font-semibold">'+escapeHtml(g.title)+'</div>'+
+          '<div class="text-sm text-gray-600">Tópico: '+escapeHtml(TOPICS[g.topicId]?.title||g.topicId)+'</div>'+
+          '<div class="mt-2 flex gap-2">'+
+            '<button class="btn btn-ghost" data-open>Abrir</button>'+
+            '<button class="btn btn-danger" data-remove>Remover</button>'+
+          '</div>';
+        el.querySelector('[data-open]').onclick = ()=>{
+          currentTopic = g.topicId;
+          setTab('content');
+          renderTopic();
+          setTimeout(()=>focusGuide(gid), 80);
+        };
+        el.querySelector('[data-remove]').onclick = ()=>{
+          const f = readFav();
+          f.guides = (f.guides||[]).filter(x=>x!==gid);
+          writeFav(f);
+          renderFavs();
+        };
+        return el;
+      }).filter(Boolean);
+
+      if (!topicCards.length && !guideCards.length){
+        favList.innerHTML='<p class="text-gray-500">Nenhum favorito ainda.</p>';
+        return;
+      }
+
+      if (topicCards.length){
+        const h = document.createElement('div');
+        h.className='font-semibold';
+        h.textContent='Tópicos';
+        favList.appendChild(h);
+        topicCards.forEach(el=>favList.appendChild(el));
+      }
+      if (guideCards.length){
+        const h = document.createElement('div');
+        h.className='font-semibold mt-4';
+        h.textContent='Guias';
+        favList.appendChild(h);
+        guideCards.forEach(el=>favList.appendChild(el));
+      }
+    }
+
+    /* ===== Lixeira ===== */
+    const trashList = $('#trashList');
+    const btnPurgeTrash = $('#btnPurgeTrash');
+    const btnRefreshTrash = $('#btnRefreshTrash');
+
+    function renderTrash(){
+      const trash = readTrash();
+      trashList.innerHTML='';
+      if (!trash.length){
+        trashList.innerHTML='<p class="text-gray-500">Lixeira vazia.</p>';
+        return;
+      }
+      trash.forEach(item=>{
+        const el = document.createElement('div');
+        el.className='border rounded-xl p-4 card';
+        el.innerHTML =
+          '<div class="flex items-start justify-between gap-3">'+
+            '<div class="min-w-0">'+
+              '<div class="font-semibold truncate">'+escapeHtml(item.title||'(sem título)')+'</div>'+
+              '<div class="text-xs text-gray-500">Tópico: '+escapeHtml(TOPICS[item.topicId]?.title||item.topicId||'-')+'</div>'+
+              '<div class="text-xs text-gray-400">Excluído em: '+escapeHtml(item.deletedAt||'-')+'</div>'+
+            '</div>'+
+            '<div class="flex gap-2 shrink-0">'+
+              '<button class="btn btn-ghost" data-restore>Restaurar</button>'+
+              '<button class="btn btn-danger" data-delete>Apagar</button>'+
+            '</div>'+
+          '</div>'+
+          '<div class="mt-2 text-xs text-gray-600 space-y-0.5" data-hist></div>';
+
+        const histBox = el.querySelector('[data-hist]');
+        const hist = Array.isArray(item.history) ? item.history : [];
+        if (hist.length){
+          hist.slice(-6).reverse().forEach(h=>{
+            const line = document.createElement('div');
+            line.textContent = (h.ts||'-')+' — '+(h.author||'-')+' — '+(h.action||'');
+            histBox.appendChild(line);
+          });
+        } else {
+          histBox.textContent='Sem histórico.';
+        }
+
+        el.querySelector('[data-restore]').onclick = ()=>{
+          restoreGuideById(item.id);
+          renderTrash();
+          renderSubsInSidebar();
+        };
+        el.querySelector('[data-delete]').onclick = ()=>{
+          if (!confirm('Apagar de vez? Isso não dá para desfazer.')) return;
+          const arr = readTrash().filter(x=>x.id!==item.id);
+          writeTrash(arr);
+          renderTrash();
+        };
+
+        trashList.appendChild(el);
+      });
+    }
+
+    btnPurgeTrash.onclick = ()=>{
+      if (!confirm('Esvaziar a lixeira? Isso apaga tudo de vez.')) return;
+      writeTrash([]);
+      renderTrash();
+    };
+    btnRefreshTrash.onclick = renderTrash;
+
+    /* ===== Ausências & Backups ===== */
     function mountAbsencesUI(){
       const formAbs = $('#absForm');
+      if (!formAbs) return;
+
       const inpP = $('#absPrincipal');
       const inpB = $('#absBackups');
       const inpS = $('#absStart');
@@ -1231,11 +1493,10 @@
         const acts = readActs();
         actsWrap.innerHTML='';
         acts.forEach(act=>{
-          const id = 'act_'+act.replace(/\s+/g,'_').toLowerCase();
           const chip = document.createElement('label');
           chip.className='inline-flex items-center gap-2 px-3 py-1 border rounded-full text-sm cursor-pointer bg-white hover:bg-indigo-50';
           chip.innerHTML =
-            '<input type="checkbox" class="h-4 w-4" data-act="'+act+'" id="'+id+'"><span>'+act+'</span>';
+            '<input type="checkbox" class="h-4 w-4" data-act="'+escapeAttr(act)+'"><span>'+escapeHtml(act)+'</span>';
           actsWrap.appendChild(chip);
         });
       }
@@ -1252,6 +1513,67 @@
         });
       }
 
+      function openActManager(){
+        const allActs  = readActs();
+        const defaults = new Set(DEFAULT_ACTIVITIES);
+        actList.innerHTML='';
+        allActs.forEach(act=>{
+          const isDefault = defaults.has(act);
+          const row = document.createElement('div');
+          row.className='border rounded-lg p-2 flex items-center gap-2';
+          row.innerHTML =
+            '<input class="flex-1 border rounded px-2 py-1 '+(isDefault?'bg-gray-50':'')+'" '+(isDefault?'disabled':'')+' value="'+escapeAttr(act)+'">'+
+            (isDefault
+              ? '<span class="text-xs text-gray-500 px-2">🔒 padrão</span>'
+              : '<div class="flex gap-2"><button class="btn btn-ghost" data-save>Salvar</button><button class="btn btn-danger" data-del>Excluir</button></div>'
+            );
+          if (!isDefault){
+            const input = row.querySelector('input');
+            row.querySelector('[data-save]').onclick = ()=>{
+              const newName = (input.value||'').trim();
+              if (!newName){ input.focus(); return; }
+              const exists = readActs().some(a=>a!==act && a.toLowerCase()===newName.toLowerCase());
+              if (exists){ alert('Já existe uma atividade com esse nome.'); return; }
+
+              const currentSaved = getSavedActs();
+              const idx = currentSaved.indexOf(act);
+              if (idx>=0) currentSaved[idx]=newName;
+              else currentSaved.push(newName);
+
+              writeActs(currentSaved.filter((v,i,a)=>a.indexOf(v)===i));
+
+              // atualiza registros antigos
+              const regs = readAbs().map(r=>{
+                const arr = (r.activities||[]).map(a=> a===act ? newName : a);
+                return {...r, activities: arr};
+              });
+              writeAbs(regs);
+
+              renderActs(); renderList(); openActManager();
+            };
+            row.querySelector('[data-del]').onclick = ()=>{
+              if (!confirm('Excluir atividade "'+act+'"?')) return;
+              const currentSaved = getSavedActs().filter(a=>a!==act);
+              writeActs(currentSaved);
+
+              const regs = readAbs().map(r=>{
+                const arr = (r.activities||[]).filter(a=>a!==act);
+                return {...r, activities: arr};
+              });
+              writeAbs(regs);
+
+              renderActs(); renderList(); openActManager();
+            };
+          }
+          actList.appendChild(row);
+        });
+
+        openModal(actModal,true);
+      }
+
+      closeAct.onclick = ()=>openModal(actModal,false);
+      actModal.onclick = (e)=>{ if (e.target===actModal) openModal(actModal,false); };
+
       btnAdd.onclick = ()=>{
         const val = (inpNew.value||'').trim();
         if (!val){ inpNew.focus(); return; }
@@ -1261,10 +1583,13 @@
           writeActs(saved);
           renderActs();
         }
-        const input = actsWrap.querySelector('input[data-act="'+CSS.escape(val)+'"]');
-        if (input) input.checked = true;
+        // marca automaticamente
+        const checkbox = [...actsWrap.querySelectorAll('input[type="checkbox"]')]
+          .find(i=>i.getAttribute('data-act')===val);
+        if (checkbox) checkbox.checked = true;
         inpNew.value='';
       };
+      btnManage.onclick = openActManager;
 
       function resetFormAbs(){
         inpP.value=''; inpB.value=''; inpS.value=''; inpE.value='';
@@ -1285,18 +1610,18 @@
           const card = document.createElement('div');
           card.className='border rounded-lg p-3 flex items-start justify-between gap-3';
           const tags = (row.activities||[])
-            .map(a=>'<span class="px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700">'+a+'</span>')
+            .map(a=>'<span class="px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700">'+escapeHtml(a)+'</span>')
             .join(' ');
           const period = (row.start||row.end)
-            ? '<div class="text-xs text-gray-600 mt-1">Período: '+(row.start||'—')+' a '+(row.end||'—')+'</div>'
+            ? '<div class="text-xs text-gray-600 mt-1">Período: '+escapeHtml(row.start||'—')+' a '+escapeHtml(row.end||'—')+'</div>'
             : '';
           card.innerHTML =
             '<div class="min-w-0">'+
-              '<div class="font-medium truncate">'+row.principal+'</div>'+
-              '<div class="text-sm text-gray-600 truncate">Backups: '+(row.backups||'-')+'</div>'+
+              '<div class="font-medium truncate">'+escapeHtml(row.principal)+'</div>'+
+              '<div class="text-sm text-gray-600 truncate">Backups: '+escapeHtml(row.backups||'-')+'</div>'+
               period+
               '<div class="mt-1 flex flex-wrap gap-1">'+(tags||'<span class="text-xs text-gray-400">Sem atividades</span>')+'</div>'+
-              '<div class="text-xs text-gray-400 mt-1">Atualizado em '+row.updated+'</div>'+
+              '<div class="text-xs text-gray-400 mt-1">Atualizado em '+escapeHtml(row.updated||'-')+'</div>'+
             '</div>'+
             '<div class="flex gap-2">'+
               '<button class="btn btn-ghost" data-edit>Editar</button>'+
@@ -1350,244 +1675,14 @@
         renderList();
       };
 
-      function openActManager(){
-        const allActs  = readActs();
-        const defaults = new Set(DEFAULT_ACTIVITIES);
-        actList.innerHTML='';
-        allActs.forEach(act=>{
-          const isDefault = defaults.has(act);
-          const row = document.createElement('div');
-          row.className='border rounded-lg p-2 flex items-center gap-2';
-          row.innerHTML =
-            '<input class="flex-1 border rounded px-2 py-1 '+(isDefault?'bg-gray-50':'')+'" '+(isDefault?'disabled':'')+' value="'+act+'">'+
-            (isDefault
-              ? '<span class="text-xs text-gray-500 px-2">🔒 padrão</span>'
-              : '<div class="flex gap-2"><button class="btn btn-ghost" data-save>Salvar</button><button class="btn btn-danger" data-del>Excluir</button></div>'
-            );
-          if (!isDefault){
-            const input = row.querySelector('input');
-            row.querySelector('[data-save]').onclick = ()=>{
-              const newName = (input.value||'').trim();
-              if (!newName){ input.focus(); return; }
-              const exists = readActs().some(a=>a!==act && a.toLowerCase()===newName.toLowerCase());
-              if (exists){ alert('Já existe uma atividade com esse nome.'); return; }
-              const currentSaved = getSavedActs();
-              const idx = currentSaved.indexOf(act);
-              if (idx>=0) currentSaved[idx]=newName;
-              writeActs(currentSaved);
-              const regs = readAbs().map(r=>{
-                const arr = (r.activities||[]).map(a=> a===act ? newName : a);
-                return {...r, activities: arr};
-              });
-              writeAbs(regs);
-              renderActs(); renderList(); openActManager();
-            };
-            row.querySelector('[data-del]').onclick = ()=>{
-              if (!confirm('Remover esta atividade? Ela também será removida dos registros.')) return;
-              const currentSaved = getSavedActs().filter(a=>a!==act);
-              writeActs(currentSaved);
-              const regs = readAbs().map(r=>{
-                const arr = (r.activities||[]).filter(a=> a!==act);
-                return {...r, activities: arr};
-              });
-              writeAbs(regs);
-              renderActs(); renderList(); openActManager();
-            };
-          }
-          actList.appendChild(row);
-        });
-        openModal(actModal,true);
-      }
-
-      btnManage.onclick = openActManager;
-      closeAct.onclick  = ()=>openModal(actModal,false);
-      actModal.onclick  = e=>{ if (e.target===actModal) openModal(actModal,false); };
-
       renderActs();
       renderList();
     }
 
-    /* ===== Busca / Favoritos / Lixeira ===== */
-    function search(q){
-      q=q.trim().toLowerCase();
-      const out=[];
-      Object.entries(TOPICS).forEach(([id,t])=>{
-        if ((t.title||'').toLowerCase().includes(q) || (t.desc||'').toLowerCase().includes(q)){
-          out.push({type:'topic',id,title:t.title,desc:t.desc});
-        }
-      });
-      readDB().forEach(g=>{
-        if ((g.title||'').toLowerCase().includes(q)){
-          out.push({type:'guide',id:g.id,topicId:g.topicId,title:g.title,desc:'Guia em '+(TOPICS[g.topicId]?.title||g.topicId)});
-        }
-      });
-      return out;
-    }
-
-    const qInput     = $('#q');
-    const searchWrap = $('#searchRes');
-
-    function renderSearchResults(){
-      const q   = qInput.value;
-      const res = search(q);
-      const wrap= searchWrap;
-      wrap.innerHTML='';
-      if (!q.trim()){
-        wrap.innerHTML='<p class="text-gray-500">Digite algo para pesquisar.</p>';
-        return;
-      }
-      if (!res.length){
-        wrap.innerHTML='<p class="text-gray-500">Nada encontrado.</p>';
-        return;
-      }
-      res.forEach(r=>{
-        const d = document.createElement('div');
-        d.className='border rounded-lg p-3';
-        d.innerHTML =
-          '<div class="text-sm '+(r.type==='topic'?'text-indigo-600':'text-green-700')+'">'+
-            (r.type==='topic'?'Tópico':'Guia')+
-          '</div>'+
-          '<div class="font-semibold">'+r.title+'</div>'+
-          '<div class="text-gray-600 text-sm">'+(r.desc||'')+'</div>'+
-          '<div class="mt-2"><button class="btn btn-ghost" data-open>Abrir</button></div>';
-        d.querySelector('[data-open]').onclick = ()=>{
-          if (r.type==='topic'){
-            currentTopic=r.id;
-            setTab('content');
-            renderTopic();
-          } else {
-            currentTopic=r.topicId;
-            setTab('content');
-            renderTopic();
-            focusGuide(r.id);
-          }
-        };
-        wrap.appendChild(d);
-      });
-    }
-
-    $('#doSearch').onclick = ()=>renderSearchResults();
-    qInput.addEventListener('input', ()=>renderSearchResults());
-    qInput.addEventListener('keydown', e=>{
-      if (e.key==='Enter'){
-        e.preventDefault();
-        renderSearchResults();
-      }
-    });
-
-    function renderFavs(){
-      const fav = readFav();
-      const wrap= $('#favList');
-      wrap.innerHTML='';
-      if (!fav.topics.length && !fav.guides.length){
-        wrap.innerHTML='<p class="text-gray-500">Você ainda não adicionou favoritos.</p>';
-        return;
-      }
-      if (fav.topics.length){
-        const box = document.createElement('div');
-        box.className='border rounded-xl p-4';
-        box.innerHTML='<div class="font-semibold mb-2">Tópicos</div>';
-        fav.topics.forEach(id=>{
-          const t = TOPICS[id];
-          if (!t) return;
-          const a = document.createElement('a');
-          a.href='#';
-          a.className='block link hover:underline';
-          a.textContent=t.title;
-          a.onclick = e=>{
-            e.preventDefault();
-            currentTopic=id;
-            setTab('content');
-            renderTopic();
-          };
-          box.appendChild(a);
-        });
-        wrap.appendChild(box);
-      }
-      if (fav.guides.length){
-        const box = document.createElement('div');
-        box.className='border rounded-xl p-4';
-        box.innerHTML='<div class="font-semibold mb-2">Guias</div>';
-        fav.guides.forEach(id=>{
-          const g = readDB().find(x=>x.id===id);
-          if (!g) return;
-          const btn = document.createElement('button');
-          btn.className='block link hover:underline text-left';
-          btn.textContent = g.title+' — '+(TOPICS[g.topicId]?.title||g.topicId);
-          btn.onclick = ()=>{
-            currentTopic=g.topicId;
-            setTab('content');
-            renderTopic();
-            focusGuide(g.id);
-          };
-          box.appendChild(btn);
-        });
-        wrap.appendChild(box);
-      }
-    }
-
-    function renderTrash(){
-      const wrap = $('#trashList');
-      if (!wrap) return;
-      const items = readTrash();
-      wrap.innerHTML='';
-      if (!items.length){
-        wrap.innerHTML='<p class="text-gray-500">Nenhum guia excluído até agora.</p>';
-        return;
-      }
-      items.forEach(item=>{
-        const t = TOPICS[item.topicId] || {};
-        const card = document.createElement('div');
-        card.className='border rounded-xl p-3 flex flex-col gap-1';
-        const lastHist = Array.isArray(item.history) && item.history.length
-          ? item.history[item.history.length - 1]
-          : null;
-        const deletedInfo = item.deletedAt || (lastHist && lastHist.ts) || '';
-        card.innerHTML =
-          '<div class="flex justify-between items-start gap-2">'+
-            '<div class="min-w-0">'+
-              '<div class="font-semibold">'+(item.title||'Sem título')+'</div>'+
-              '<div class="text-xs text-gray-500">Tópico: '+(t.title||item.topicId||'-')+'</div>'+
-              '<div class="text-xs text-gray-500">Autor original: '+(item.author||'-')+'</div>'+
-            '</div>'+
-            '<span class="px-2 py-1 rounded-full text-[11px] bg-red-50 text-red-700">Excluído</span>'+
-          '</div>'+
-          '<div class="text-xs text-gray-400">Excluído em: '+(deletedInfo||'-')+'</div>'+
-          '<div class="mt-1 flex justify-end">'+
-            '<button class="btn btn-ghost text-xs" data-restore>Restaurar</button>'+
-          '</div>'+
-          (Array.isArray(item.history) && item.history.length
-            ? '<details class="mt-1 text-xs text-gray-600"><summary class="cursor-pointer select-none">Ver histórico deste guia</summary><div class="mt-1 space-y-0.5" data-trash-history></div></details>'
-            : '');
-
-        const histContainer = card.querySelector('[data-trash-history]');
-        if (histContainer && Array.isArray(item.history)){
-          item.history.forEach(h=>{
-            const line = document.createElement('div');
-            line.textContent = (h.ts||'-')+' — '+(h.author||'-')+' — '+(h.action||'atualização');
-            histContainer.appendChild(line);
-          });
-        }
-
-        const restoreBtn = card.querySelector('[data-restore]');
-        if (restoreBtn){
-          restoreBtn.onclick = ()=>{
-            if (confirm('Restaurar este guia? Ele voltará para o tópico original.')){
-              restoreGuideById(item.id);
-              renderTrash();
-              if (currentTopic === item.topicId){
-                renderTopic();
-              }
-            }
-          };
-        }
-
-        wrap.appendChild(card);
-      });
-    }
-
-    // carrega dados compartilhados do Worker
+    /* ===== Boot ===== */
     loadRemote();
+    renderTopic();
+    renderSubsInSidebar();
   </script>
 </body>
 </html>
