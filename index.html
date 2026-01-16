@@ -114,8 +114,10 @@
               <div class="pl-2" data-subs-for="recuperacao"></div>
               <a class="sidebar-item hover:bg-gray-50" href="#" data-topic="cobranca">Cobrança</a>
               <div class="pl-2" data-subs-for="cobranca"></div>
+
               <a class="sidebar-item hover:bg-gray-50" href="#" data-topic="cielo">Cielo</a>
               <div class="pl-2" data-subs-for="cielo"></div>
+
               <a class="sidebar-item hover:bg-gray-50" href="#" data-topic="monitoramento de bandeira">Monitoramento de Bandeira</a>
               <div class="pl-2" data-subs-for="monitoramento de bandeira"></div>
             </div>
@@ -159,6 +161,27 @@
               <div class="pl-2" data-subs-for="estruturas-dados"></div>
               <a class="sidebar-item hover:bg-gray-50" href="#" data-topic="modelagens-automacoes">Modelagens e automações</a>
               <div class="pl-2" data-subs-for="modelagens-automacoes"></div>
+            </div>
+          </div>
+
+          <!-- ✅ NOVA ÁREA: Suporte - SOP -->
+          <div class="border rounded-xl">
+            <button class="sidebar-btn w-full font-medium hover:bg-gray-50" data-acc="suporte">
+              <span class="flex items-center gap-2">🧩 Suporte - SOP</span>
+              <span data-acc-icon="suporte">▼</span>
+            </button>
+            <div class="px-2 pb-3" id="acc-suporte">
+              <a class="sidebar-item hover:bg-gray-50" href="#" data-topic="suporte-sop">Suporte - SOP</a>
+              <div class="pl-2" data-subs-for="suporte-sop"></div>
+
+              <a class="sidebar-item hover:bg-gray-50" href="#" data-topic="sup-pagamentos">Pagamentos</a>
+              <div class="pl-2" data-subs-for="sup-pagamentos"></div>
+
+              <a class="sidebar-item hover:bg-gray-50" href="#" data-topic="sup-banking">Banking</a>
+              <div class="pl-2" data-subs-for="sup-banking"></div>
+
+              <a class="sidebar-item hover:bg-gray-50" href="#" data-topic="sup-hub">Hub</a>
+              <div class="pl-2" data-subs-for="sup-hub"></div>
             </div>
           </div>
 
@@ -255,6 +278,17 @@
             <li><a class="link hover:underline" data-jump="modelagens-automacoes">Modelagens e automações</a></li>
           </ul>
         </div>
+
+        <div class="border rounded-xl p-4">
+          <div class="font-semibold mb-2">🧩 Suporte - SOP</div>
+          <ul class="space-y-1">
+            <li><a class="link hover:underline" data-jump="suporte-sop">Suporte - SOP</a></li>
+            <li><a class="link hover:underline" data-jump="sup-pagamentos">Pagamentos</a></li>
+            <li><a class="link hover:underline" data-jump="sup-banking">Banking</a></li>
+            <li><a class="link hover:underline" data-jump="sup-hub">Hub</a></li>
+          </ul>
+        </div>
+
         <div class="border rounded-xl p-4">
           <div class="font-semibold mb-2">👥 Times & Operação</div>
           <ul class="space-y-1">
@@ -428,7 +462,7 @@
     }
     if (typeof window.CSS === 'undefined') window.CSS = {};
     if (typeof window.CSS.escape !== 'function') {
-      window.CSS.escape = function (s) { return String(s).replace(/[^a-zA-Z0-9_\\-]/g, '\\\\$&'); };
+      window.CSS.escape = function (s) { return String(s).replace(/[^a-zA-Z0-9_\-]/g, '\\$&'); };
     }
     const $  = (s,p=document)=>p.querySelector(s);
     const $$ = (s,p=document)=>[...p.querySelectorAll(s)];
@@ -453,36 +487,39 @@
     const TOPICS = {
       'intro-sobre': { title:'Sobre esta central', desc:'', html:'<h2>Bem-vindo 👋</h2><p>Use <b>Favoritos</b> para marcar o que você consulta com frequência.</p><p>Dica: nas guias, insira imagens direto na descrição (🖼️) para elas não sumirem ao editar.</p>' },
       'intro-visao': { title:'Gestão de Operações e Risco — visão', desc:'', html:'<h2>Visão concentrada</h2><p>Menu em árvore à esquerda e leitura à direita.</p>' },
+
       credenciamento:{title:'Credenciamento',desc:'Credenciamento — Criação/ativação de conta, gateways, adquirentes, VP.'},
       descredenciamento:{title:'Descredenciamento',desc:'Encerramento/ajustes de contas e adequações.'},
       kyc:{title:'1ª Venda (KYC)',desc:'Análise do modelo de negócio e risco.'},
       movimentacoes:{title:'Movimentações',desc:'Saque, antecipações e transferências.'},
       investigacoes:{title:'Investigações',desc:'Monitoramento e abertura de investigação.'},
       recebiveis:{title:'Recebíveis',desc:'Parametrização e liberação mediante evidências.'},
+
       disputa:{title:'Disputa',desc:'Bloqueio temporário e decisão por evidências.'},
       chargeback:{title:'Chargeback',desc:'Defesa junto às adquirentes.'},
       recuperacao:{title:'Recuperação',desc:'Reversões e contato ativo.'},
       cobranca:{title:'Cobrança',desc:'Gestão de saldo negativo.'},
 
-      /* ✅ ALTERAÇÃO 1: Cielo normal */
-      cielo:{ title:'Cielo', desc:'Conteúdos e registros relacionados à Cielo.' },
-
-      /* ✅ ALTERAÇÃO 2: chave com espaço precisa de aspas */
-      'monitoramento de bandeira':{
-        title:'Monitoramento de Bandeira',
-        desc:'Monitoramento de indicadores e alertas de bandeiras.'
-      },
+      cielo:{title:'Cielo',desc:'Registro / rotinas relacionadas à Cielo.'},
+      'monitoramento de bandeira':{title:'Monitoramento de Bandeira',desc:'Monitoramento de indicadores de Bandeira.'},
 
       'proc-analise':{title:'Processo de Análise',desc:'Antifraude, manual e monitoramentos.'},
       monitoramentos:{title:'Monitoramentos',desc:'Alertas e anomalias.'},
       'alertas-pos':{title:'Alertas POS',desc:'Cenários de risco e bloqueios.'},
       'fraude-recebiveis':{title:'Recebíveis (Fraude)',desc:'Bloqueio até comprovação da venda.'},
-      'med':{title:'MED',desc:'Conteúdos e guias sobre MED.'},
-      'qitech':{title:'Qitech',desc:'Conteúdos e guias sobre Qitech.'},
-      'boleto':{title:'Boleto',desc:'Conteúdos e guias sobre Boleto.'},
+      med:{title:'MED',desc:'Conteúdos e guias sobre MED.'},
+      qitech:{title:'Qitech',desc:'Conteúdos e guias sobre Qitech.'},
+      boleto:{title:'Boleto',desc:'Conteúdos e guias sobre Boleto.'},
+
       'ctrl-visao':{title:'Controles & Processos — Visão',desc:'Acompanhamento e indicadores.'},
       'estruturas-dados':{title:'Estruturas de dados',desc:'Dicionários e schemas.'},
       'modelagens-automacoes':{title:'Modelagens e automações de processos',desc:'Fluxos e integrações.'},
+
+      'suporte-sop':{title:'Suporte - SOP',desc:'Procedimentos operacionais padrão (SOP) e rotinas de suporte.'},
+      'sup-pagamentos':{title:'Pagamentos',desc:'SOPs e fluxos da operação de Pagamentos.'},
+      'sup-banking':{title:'Banking',desc:'SOPs e rotinas da operação de Banking.'},
+      'sup-hub':{title:'Hub',desc:'SOPs e rotinas do Hub de Pagamentos.'},
+
       ausencias:{
         title:'Ausências & Backups',
         desc:'',
@@ -542,13 +579,7 @@
     /* ===== Backend compartilhado (Worker + KV) ===== */
     const API_URL = 'https://central-ajuda-api.vitoria-leite.workers.dev/db';
 
-    const STATE = {
-      guides: [],
-      subs: {},
-      absences: [],
-      acts: [],
-      deletedGuides: []
-    };
+    const STATE = { guides: [], subs: {}, absences: [], acts: [], deletedGuides: [] };
 
     function applyRemoteState(data) {
       if (!data || typeof data !== 'object') return;
@@ -560,12 +591,10 @@
     }
 
     let __saveTimer = null;
-
     function scheduleSaveRemote() {
       if (__saveTimer) clearTimeout(__saveTimer);
-      __saveTimer = setTimeout(doSaveRemote, 250); // debounce evita corrida (race)
+      __saveTimer = setTimeout(doSaveRemote, 250);
     }
-
     function doSaveRemote() {
       __saveTimer = null;
       const payload = {
@@ -575,31 +604,20 @@
         acts:          STATE.acts          || [],
         deletedGuides: STATE.deletedGuides || []
       };
-      fetch(API_URL, {
-        method: 'PUT',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      }).catch(err => console.error('Erro salvando base remota', err));
+      fetch(API_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) })
+        .catch(err => console.error('Erro salvando base remota', err));
     }
-
     async function loadRemote() {
       try {
         const res = await fetch(API_URL);
-        if (res.ok) {
-          const data = await res.json();
-          applyRemoteState(data);
-        } else {
-          console.warn('Erro HTTP ao carregar base remota', res.status);
-        }
-      } catch (e) {
-        console.warn('Não foi possível carregar base remota (usando vazio)', e);
-      }
+        if (res.ok) applyRemoteState(await res.json());
+        else console.warn('Erro HTTP ao carregar base remota', res.status);
+      } catch (e) { console.warn('Não foi possível carregar base remota (usando vazio)', e); }
       cleanupOrphanSubtitles();
       renderTopic();
       renderSubsInSidebar();
     }
 
-    /* ===== Storage (STATE) ===== */
     const readDB    = () => STATE.guides   || [];
     const writeDB   = a  => { STATE.guides   = a || []; scheduleSaveRemote(); };
     const readSubs  = () => STATE.subs     || {};
@@ -611,14 +629,14 @@
     const readTrash  = () => STATE.deletedGuides || [];
     const writeTrash = arr => { STATE.deletedGuides = arr || []; scheduleSaveRemote(); };
 
-    /* ✅ ALTERAÇÃO 3: inclui Cielo + Monitoramento de Bandeira nas atividades padrão */
     const DEFAULT_ACTIVITIES = [
       'Credenciamento','Descredenciamento','1ª Venda (KYC)','Movimentações',
       'Investigações','Recebíveis','Disputa','Chargeback','Recuperação','Cobrança',
-      'Cielo','Monitoramento de Bandeira',
       'Processo de Análise','Monitoramentos','Alertas POS','Recebíveis (Fraude)',
-      'Estruturas de dados','Modelagens e automações de processos'
+      'Estruturas de dados','Modelagens e automações de processos',
+      'Suporte - SOP'
     ];
+
     const readActs = () => {
       const saved = getSavedActs();
       const set = new Set([...DEFAULT_ACTIVITIES, ...saved]);
@@ -643,32 +661,21 @@
       if (changed) writeSubs(subs);
     }
 
-    /* ===== Favoritos (local) ===== */
     const FAV_KEY = 'or_help_favs_v1';
     const readFav = ()=>JSON.parse(localStorage.getItem(FAV_KEY)||'{"topics":[],"guides":[]}');
     const writeFav= v => localStorage.setItem(FAV_KEY, JSON.stringify(v));
 
-    /* ===== Abas ===== */
     const tabsBtns = $$('[data-tab]');
-    const tabsPanes = {
-      content: $('#tab-content'),
-      index:   $('#tab-index'),
-      search:  $('#tab-search'),
-      favs:    $('#tab-favs'),
-      trash:   $('#tab-trash')
-    };
+    const tabsPanes = { content: $('#tab-content'), index: $('#tab-index'), search: $('#tab-search'), favs: $('#tab-favs'), trash: $('#tab-trash') };
     function setTab(name){
       tabsBtns.forEach(b=>b.classList.toggle('tab-on', b.dataset.tab===name));
-      Object.entries(tabsPanes).forEach(([k,p])=>{
-        if (p) p.classList.toggle('hidden', k!==name);
-      });
+      Object.entries(tabsPanes).forEach(([k,p])=>{ if (p) p.classList.toggle('hidden', k!==name); });
       if (name==='favs')  renderFavs();
       if (name==='trash') renderTrash();
     }
     tabsBtns.forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
     setTab('content');
 
-    /* ===== Accordion ===== */
     function initAccordion(){
       $$('[data-acc]').forEach(btn=>{
         btn.addEventListener('click', ()=>{
@@ -682,7 +689,6 @@
     }
     initAccordion();
 
-    /* ===== Navegação Índice ===== */
     $$('[data-jump]').forEach(a=>{
       a.addEventListener('click', ()=>{
         currentTopic = a.getAttribute('data-jump');
@@ -691,7 +697,6 @@
       });
     });
 
-    /* ===== Tópico atual ===== */
     let currentTopic='credenciamento';
     let editingId = null;
 
@@ -710,9 +715,7 @@
       $$('.sidebar-item[data-topic]').forEach(a=>a.classList.toggle('active', a.dataset.topic===currentTopic));
 
       const fav = readFav();
-      btnFav.textContent = fav.topics.includes(currentTopic)
-        ? '★ Remover dos Favoritos'
-        : '☆ Favoritar tópico';
+      btnFav.textContent = fav.topics.includes(currentTopic) ? '★ Remover dos Favoritos' : '☆ Favoritar tópico';
 
       if (t.html){
         topicHtmlEl.innerHTML = t.html;
@@ -750,7 +753,6 @@
       renderTopic();
     };
 
-    /* ===== Subtítulos ===== */
     const subModal      = $('#subModal');
     const subTopicName  = $('#subTopicName');
     const subForm       = $('#subForm');
@@ -774,14 +776,15 @@
             currentTopic = topicId;
             setTab('content');
             renderTopic();
-            if (s.guideId){
-              setTimeout(()=>{focusGuide(s.guideId);},80);
-            }
+            if (s.guideId){ setTimeout(()=>{focusGuide(s.guideId);},80); }
           };
           box.appendChild(a);
         });
       });
     }
+
+    function escapeHtml(str){ return String(str||'').replace(/[&<>"]/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[s])); }
+    function escapeAttr(str){ return escapeHtml(str).replace(/'/g,'&#39;'); }
 
     function addSubRow(title='', desc='', guideId=''){
       const guides = readDB().filter(g=>g.topicId===currentTopic);
@@ -843,10 +846,6 @@
       renderSubsInSidebar();
     };
 
-    /* ===== Guias ===== */
-    function escapeHtml(str){ return String(str||'').replace(/[&<>"]/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[s])); }
-    function escapeAttr(str){ return escapeHtml(str).replace(/'/g,'&#39;'); }
-
     function getSubtitleForGuide(topicId, guideId){
       const arr = readSubs()[topicId] || [];
       const s = arr.find(x=>x.guideId===guideId);
@@ -861,10 +860,7 @@
       const toggle= el.querySelector('[data-toggle]');
       if (body && body.classList.contains('hidden')){
         body.classList.remove('hidden');
-        if (toggle){
-          toggle.setAttribute('aria-expanded','true');
-          toggle.textContent='▾';
-        }
+        if (toggle){ toggle.setAttribute('aria-expanded','true'); toggle.textContent='▾'; }
       }
       el.scrollIntoView({behavior:'smooth', block:'start'});
       const first = el.querySelector('details');
@@ -875,7 +871,6 @@
       const db = readDB();
       const idx = db.findIndex(x=>x.id===guideId);
       if (idx === -1) return;
-
       const g = db[idx];
 
       const deletedAt = nowFmt();
@@ -884,15 +879,11 @@
 
       const trashItem = { ...g, history: hist, deletedAt };
       const trash = readTrash();
-      writeTrash([trashItem, ...trash]); // mais recente primeiro
+      writeTrash([trashItem, ...trash]);
 
-      // remove o guia do DB
       db.splice(idx,1);
       writeDB(db);
 
-      // remove vínculos de subtítulo:
-      // 1) normal: subtítulo vinculado por guideId
-      // 2) fallback: se existir subtítulo antigo sem guideId, remove pelo mesmo título do guia
       const subs = readSubs();
       const norm = v => String(v||'').trim().toLowerCase();
       const gTitleNorm = norm(g.title);
@@ -906,10 +897,8 @@
       });
       writeSubs(subs);
 
-      // garante limpeza de qualquer outro “órfão”
       cleanupOrphanSubtitles();
 
-      // remove de favoritos (local)
       const fav = readFav();
       fav.guides = (fav.guides||[]).filter(id=>id!==guideId);
       writeFav(fav);
@@ -951,9 +940,7 @@
         card.setAttribute('data-guide',g.id);
 
         const subTitle = getSubtitleForGuide(g.topicId,g.id);
-        const subBadge = subTitle
-          ? '<span class="px-2 py-1 rounded-full text-xs bg-indigo-50 text-indigo-700 whitespace-nowrap">'+escapeHtml(subTitle)+'</span>'
-          : '';
+        const subBadge = subTitle ? '<span class="px-2 py-1 rounded-full text-xs bg-indigo-50 text-indigo-700 whitespace-nowrap">'+escapeHtml(subTitle)+'</span>' : '';
 
         card.innerHTML =
           '<div class="flex items-start justify-between gap-3">'+
@@ -1032,7 +1019,6 @@
                   linksHtml+
                 '</div>';
 
-              // Zoom: imagens dentro da descrição (Quill)
               det.addEventListener('click', (ev)=>{
                 const target = ev.target;
                 if (target && target.tagName === 'IMG' && target.closest('.prose')){
@@ -1048,10 +1034,8 @@
         };
 
         card.querySelector('[data-edit]').onclick = ()=>openEditor(g.id);
-
         card.querySelector('[data-del]').onclick = (ev)=>{
-          ev.preventDefault();
-          ev.stopPropagation();
+          ev.preventDefault(); ev.stopPropagation();
           if (confirm('Excluir este guia? Ele vai para a Lixeira (com histórico).')){
             deleteGuideById(g.id);
             renderTopic();
@@ -1063,8 +1047,7 @@
           const fv = readFav();
           fv.guides = fv.guides || [];
           const idx = fv.guides.indexOf(g.id);
-          if (idx>=0) fv.guides.splice(idx,1);
-          else        fv.guides.push(g.id);
+          if (idx>=0) fv.guides.splice(idx,1); else fv.guides.push(g.id);
           writeFav(fv);
           renderGuides();
         };
@@ -1073,7 +1056,6 @@
       });
     }
 
-    /* ===== Modal Guia / Quill + IMAGEM NA DESCRIÇÃO ===== */
     const guideModal  = $('#guideModal');
     const imgModal    = $('#imgModal');
     const stepsWrap   = $('#stepsWrap');
@@ -1196,14 +1178,11 @@
         form.author.value  = g.author;
         form.role.value    = g.role;
         form.updated.value = g.updated;
-
-        // Carrega passos com HTML já salvo (inclui imagens)
         (g.steps||[]).forEach(st=> addStep(st.title||'', st.desc||'', st.links||[]) );
       } else {
         modTitle.textContent='Adicionar guia';
         btnDeleteGuide.classList.add('hidden');
-        addStep();
-        addStep();
+        addStep(); addStep();
       }
       openModal(guideModal,true);
     }
@@ -1233,11 +1212,7 @@
         const linksInput = row.querySelector('[name="st_links"]');
         const title      = row.querySelector('[name="st_title"]').value.trim();
         const descHtml   = descEditor ? descEditor.innerHTML : '';
-        const st = {
-          title,
-          desc: descHtml,           // ✅ aqui ficam as imagens (data:... ou https://...)
-          links: parseLinks(linksInput ? linksInput.value : '')
-        };
+        const st = { title, desc: descHtml, links: parseLinks(linksInput ? linksInput.value : '') };
         g.steps.push(st);
       }
 
@@ -1282,7 +1257,6 @@
       }
     };
 
-    /* ===== Pesquisar ===== */
     const qInput = $('#q');
     const doSearch = $('#doSearch');
     const searchRes = $('#searchRes');
@@ -1295,34 +1269,21 @@
 
     function runSearch(){
       const q = (qInput.value||'').trim().toLowerCase();
-      if (!q){
-        searchRes.innerHTML='<p class="text-gray-500">Digite algo para buscar.</p>';
-        return;
-      }
+      if (!q){ searchRes.innerHTML='<p class="text-gray-500">Digite algo para buscar.</p>'; return; }
 
       const out = [];
-
-      // Tópicos
       Object.entries(TOPICS).forEach(([id,t])=>{
         const hay = (t.title+' '+(t.desc||'')+' '+(t.html?stripHtml(t.html):'')).toLowerCase();
-        if (hay.includes(q)){
-          out.push({type:'topic', id, title:t.title, desc:t.desc||''});
-        }
+        if (hay.includes(q)) out.push({type:'topic', id, title:t.title, desc:t.desc||''});
       });
 
-      // Guias
       readDB().forEach(g=>{
         const textSteps = (g.steps||[]).map(s=> (s.title||'')+' '+stripHtml(s.desc||'')+' '+(s.links||[]).join(' ')).join(' ');
         const hay = (g.title+' '+(g.author||'')+' '+(g.role||'')+' '+textSteps).toLowerCase();
-        if (hay.includes(q)){
-          out.push({type:'guide', id:g.id, topicId:g.topicId, title:g.title, desc:'Tópico: '+(TOPICS[g.topicId]?.title||g.topicId)});
-        }
+        if (hay.includes(q)) out.push({type:'guide', id:g.id, topicId:g.topicId, title:g.title, desc:'Tópico: '+(TOPICS[g.topicId]?.title||g.topicId)});
       });
 
-      if (!out.length){
-        searchRes.innerHTML='<p class="text-gray-500">Nada encontrado.</p>';
-        return;
-      }
+      if (!out.length){ searchRes.innerHTML='<p class="text-gray-500">Nada encontrado.</p>'; return; }
 
       searchRes.innerHTML='';
       out.slice(0,50).forEach(item=>{
@@ -1349,13 +1310,9 @@
     }
 
     doSearch.onclick = runSearch;
-    qInput.addEventListener('keydown', e=>{
-      if (e.key==='Enter'){ e.preventDefault(); runSearch(); }
-    });
+    qInput.addEventListener('keydown', e=>{ if (e.key==='Enter'){ e.preventDefault(); runSearch(); } });
 
-    /* ===== Favoritos ===== */
     const favList = $('#favList');
-
     function renderFavs(){
       const fav = readFav();
       favList.innerHTML='';
@@ -1372,16 +1329,9 @@
             '<button class="btn btn-ghost" data-open>Abrir</button>'+
             '<button class="btn btn-danger" data-remove>Remover</button>'+
           '</div>';
-        el.querySelector('[data-open]').onclick = ()=>{
-          currentTopic = tid;
-          setTab('content');
-          renderTopic();
-        };
+        el.querySelector('[data-open]').onclick = ()=>{ currentTopic = tid; setTab('content'); renderTopic(); };
         el.querySelector('[data-remove]').onclick = ()=>{
-          const f = readFav();
-          f.topics = (f.topics||[]).filter(x=>x!==tid);
-          writeFav(f);
-          renderFavs();
+          const f = readFav(); f.topics = (f.topics||[]).filter(x=>x!==tid); writeFav(f); renderFavs();
         };
         return el;
       }).filter(Boolean);
@@ -1398,43 +1348,19 @@
             '<button class="btn btn-ghost" data-open>Abrir</button>'+
             '<button class="btn btn-danger" data-remove>Remover</button>'+
           '</div>';
-        el.querySelector('[data-open]').onclick = ()=>{
-          currentTopic = g.topicId;
-          setTab('content');
-          renderTopic();
-          setTimeout(()=>focusGuide(gid), 80);
-        };
+        el.querySelector('[data-open]').onclick = ()=>{ currentTopic = g.topicId; setTab('content'); renderTopic(); setTimeout(()=>focusGuide(gid), 80); };
         el.querySelector('[data-remove]').onclick = ()=>{
-          const f = readFav();
-          f.guides = (f.guides||[]).filter(x=>x!==gid);
-          writeFav(f);
-          renderFavs();
+          const f = readFav(); f.guides = (f.guides||[]).filter(x=>x!==gid); writeFav(f); renderFavs();
         };
         return el;
       }).filter(Boolean);
 
-      if (!topicCards.length && !guideCards.length){
-        favList.innerHTML='<p class="text-gray-500">Nenhum favorito ainda.</p>';
-        return;
-      }
+      if (!topicCards.length && !guideCards.length){ favList.innerHTML='<p class="text-gray-500">Nenhum favorito ainda.</p>'; return; }
 
-      if (topicCards.length){
-        const h = document.createElement('div');
-        h.className='font-semibold';
-        h.textContent='Tópicos';
-        favList.appendChild(h);
-        topicCards.forEach(el=>favList.appendChild(el));
-      }
-      if (guideCards.length){
-        const h = document.createElement('div');
-        h.className='font-semibold mt-4';
-        h.textContent='Guias';
-        favList.appendChild(h);
-        guideCards.forEach(el=>favList.appendChild(el));
-      }
+      if (topicCards.length){ const h=document.createElement('div'); h.className='font-semibold'; h.textContent='Tópicos'; favList.appendChild(h); topicCards.forEach(el=>favList.appendChild(el)); }
+      if (guideCards.length){ const h=document.createElement('div'); h.className='font-semibold mt-4'; h.textContent='Guias'; favList.appendChild(h); guideCards.forEach(el=>favList.appendChild(el)); }
     }
 
-    /* ===== Lixeira ===== */
     const trashList = $('#trashList');
     const btnPurgeTrash = $('#btnPurgeTrash');
     const btnRefreshTrash = $('#btnRefreshTrash');
@@ -1442,10 +1368,7 @@
     function renderTrash(){
       const trash = readTrash();
       trashList.innerHTML='';
-      if (!trash.length){
-        trashList.innerHTML='<p class="text-gray-500">Lixeira vazia.</p>';
-        return;
-      }
+      if (!trash.length){ trashList.innerHTML='<p class="text-gray-500">Lixeira vazia.</p>'; return; }
       trash.forEach(item=>{
         const el = document.createElement('div');
         el.className='border rounded-xl p-4 card';
@@ -1466,25 +1389,13 @@
         const histBox = el.querySelector('[data-hist]');
         const hist = Array.isArray(item.history) ? item.history : [];
         if (hist.length){
-          hist.slice(-6).reverse().forEach(h=>{
-            const line = document.createElement('div');
-            line.textContent = (h.ts||'-')+' — '+(h.author||'-')+' — '+(h.action||'');
-            histBox.appendChild(line);
-          });
-        } else {
-          histBox.textContent='Sem histórico.';
-        }
+          hist.slice(-6).reverse().forEach(h=>{ const line=document.createElement('div'); line.textContent=(h.ts||'-')+' — '+(h.author||'-')+' — '+(h.action||''); histBox.appendChild(line); });
+        } else { histBox.textContent='Sem histórico.'; }
 
-        el.querySelector('[data-restore]').onclick = ()=>{
-          restoreGuideById(item.id);
-          renderTrash();
-          renderSubsInSidebar();
-        };
+        el.querySelector('[data-restore]').onclick = ()=>{ restoreGuideById(item.id); renderTrash(); renderSubsInSidebar(); };
         el.querySelector('[data-delete]').onclick = ()=>{
           if (!confirm('Apagar de vez? Isso não dá para desfazer.')) return;
-          const arr = readTrash().filter(x=>x.id!==item.id);
-          writeTrash(arr);
-          renderTrash();
+          const arr = readTrash().filter(x=>x.id!==item.id); writeTrash(arr); renderTrash();
         };
 
         trashList.appendChild(el);
@@ -1493,12 +1404,10 @@
 
     btnPurgeTrash.onclick = ()=>{
       if (!confirm('Esvaziar a lixeira? Isso apaga tudo de vez.')) return;
-      writeTrash([]);
-      renderTrash();
+      writeTrash([]); renderTrash();
     };
     btnRefreshTrash.onclick = renderTrash;
 
-    /* ===== Ausências & Backups ===== */
     function mountAbsencesUI(){
       const formAbs = $('#absForm');
       if (!formAbs) return;
@@ -1528,22 +1437,17 @@
         acts.forEach(act=>{
           const chip = document.createElement('label');
           chip.className='inline-flex items-center gap-2 px-3 py-1 border rounded-full text-sm cursor-pointer bg-white hover:bg-indigo-50';
-          chip.innerHTML =
-            '<input type="checkbox" class="h-4 w-4" data-act="'+escapeAttr(act)+'"><span>'+escapeHtml(act)+'</span>';
+          chip.innerHTML = '<input type="checkbox" class="h-4 w-4" data-act="'+escapeAttr(act)+'"><span>'+escapeHtml(act)+'</span>';
           actsWrap.appendChild(chip);
         });
       }
 
       function getSelectedActs(){
-        return [...actsWrap.querySelectorAll('input[type="checkbox"]')]
-          .filter(i=>i.checked)
-          .map(i=>i.getAttribute('data-act'));
+        return [...actsWrap.querySelectorAll('input[type="checkbox"]')].filter(i=>i.checked).map(i=>i.getAttribute('data-act'));
       }
       function setSelectedActs(arr){
         const set = new Set(arr||[]);
-        actsWrap.querySelectorAll('input[type="checkbox"]').forEach(ch=>{
-          ch.checked = set.has(ch.getAttribute('data-act'));
-        });
+        actsWrap.querySelectorAll('input[type="checkbox"]').forEach(ch=>{ ch.checked = set.has(ch.getAttribute('data-act')); });
       }
 
       function openActManager(){
@@ -1556,26 +1460,21 @@
           row.className='border rounded-lg p-2 flex items-center gap-2';
           row.innerHTML =
             '<input class="flex-1 border rounded px-2 py-1 '+(isDefault?'bg-gray-50':'')+'" '+(isDefault?'disabled':'')+' value="'+escapeAttr(act)+'">'+
-            (isDefault
-              ? '<span class="text-xs text-gray-500 px-2">🔒 padrão</span>'
-              : '<div class="flex gap-2"><button class="btn btn-ghost" data-save>Salvar</button><button class="btn btn-danger" data-del>Excluir</button></div>'
-            );
+            (isDefault ? '<span class="text-xs text-gray-500 px-2">🔒 padrão</span>' : '<div class="flex gap-2"><button class="btn btn-ghost" data-save>Salvar</button><button class="btn btn-danger" data-del>Excluir</button></div>');
+
           if (!isDefault){
             const input = row.querySelector('input');
             row.querySelector('[data-save]').onclick = ()=>{
               const newName = (input.value||'').trim();
               if (!newName){ input.focus(); return; }
-              const exists = readActs().some(a=>a!==act && a.toLowerCase()===newName.toLowerCase());
+              const exists = readActs().some(a=>a!==act && a.toLowerCase()==newName.toLowerCase());
               if (exists){ alert('Já existe uma atividade com esse nome.'); return; }
 
               const currentSaved = getSavedActs();
               const idx = currentSaved.indexOf(act);
-              if (idx>=0) currentSaved[idx]=newName;
-              else currentSaved.push(newName);
-
+              if (idx>=0) currentSaved[idx]=newName; else currentSaved.push(newName);
               writeActs(currentSaved.filter((v,i,a)=>a.indexOf(v)===i));
 
-              // atualiza registros antigos
               const regs = readAbs().map(r=>{
                 const arr = (r.activities||[]).map(a=> a===act ? newName : a);
                 return {...r, activities: arr};
@@ -1584,6 +1483,7 @@
 
               renderActs(); renderList(); openActManager();
             };
+
             row.querySelector('[data-del]').onclick = ()=>{
               if (!confirm('Excluir atividade "'+act+'"?')) return;
               const currentSaved = getSavedActs().filter(a=>a!==act);
@@ -1600,7 +1500,6 @@
           }
           actList.appendChild(row);
         });
-
         openModal(actModal,true);
       }
 
@@ -1611,14 +1510,8 @@
         const val = (inpNew.value||'').trim();
         if (!val){ inpNew.focus(); return; }
         const saved = getSavedActs();
-        if (!saved.includes(val)){
-          saved.push(val);
-          writeActs(saved);
-          renderActs();
-        }
-        // marca automaticamente
-        const checkbox = [...actsWrap.querySelectorAll('input[type="checkbox"]')]
-          .find(i=>i.getAttribute('data-act')===val);
+        if (!saved.includes(val)){ saved.push(val); writeActs(saved); renderActs(); }
+        const checkbox = [...actsWrap.querySelectorAll('input[type="checkbox"]')].find(i=>i.getAttribute('data-act')===val);
         if (checkbox) checkbox.checked = true;
         inpNew.value='';
       };
@@ -1635,19 +1528,12 @@
       function renderList(){
         const data = readAbs();
         list.innerHTML='';
-        if (!data.length){
-          list.innerHTML='<p class="text-gray-500">Nenhum registro cadastrado.</p>';
-          return;
-        }
+        if (!data.length){ list.innerHTML='<p class="text-gray-500">Nenhum registro cadastrado.</p>'; return; }
         data.forEach((row,idx)=>{
           const card = document.createElement('div');
           card.className='border rounded-lg p-3 flex items-start justify-between gap-3';
-          const tags = (row.activities||[])
-            .map(a=>'<span class="px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700">'+escapeHtml(a)+'</span>')
-            .join(' ');
-          const period = (row.start||row.end)
-            ? '<div class="text-xs text-gray-600 mt-1">Período: '+escapeHtml(row.start||'—')+' a '+escapeHtml(row.end||'—')+'</div>'
-            : '';
+          const tags = (row.activities||[]).map(a=>'<span class="px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700">'+escapeHtml(a)+'</span>').join(' ');
+          const period = (row.start||row.end) ? '<div class="text-xs text-gray-600 mt-1">Período: '+escapeHtml(row.start||'—')+' a '+escapeHtml(row.end||'—')+'</div>' : '';
           card.innerHTML =
             '<div class="min-w-0">'+
               '<div class="font-medium truncate">'+escapeHtml(row.principal)+'</div>'+
@@ -1662,18 +1548,12 @@
             '</div>';
 
           card.querySelector('[data-del]').onclick = ()=>{
-            const arr = readAbs();
-            arr.splice(idx,1);
-            writeAbs(arr);
-            renderList();
+            const arr = readAbs(); arr.splice(idx,1); writeAbs(arr); renderList();
             if (editingIndex===idx) resetFormAbs();
           };
           card.querySelector('[data-edit]').onclick = ()=>{
             const r = readAbs()[idx];
-            inpP.value=r.principal||'';
-            inpB.value=r.backups||'';
-            inpS.value=r.start||'';
-            inpE.value=r.end||'';
+            inpP.value=r.principal||''; inpB.value=r.backups||''; inpS.value=r.start||''; inpE.value=r.end||'';
             setSelectedActs(r.activities||[]);
             editingIndex=idx;
             btn.textContent='Atualizar';
@@ -1695,14 +1575,10 @@
         const end       = (inpE.value||'').trim();
         const activities= getSelectedActs();
         if (!principal){ inpP.focus(); return; }
-        if (start && end && start > end){
-          alert('Data inicial não pode ser maior que a final.');
-          return;
-        }
+        if (start && end && start > end){ alert('Data inicial não pode ser maior que a final.'); return; }
         const arr = readAbs();
         const payload = {principal,backups,start,end,activities,updated:nowFmt()};
-        if (editingIndex!==null) arr[editingIndex]=payload;
-        else                     arr.unshift(payload);
+        if (editingIndex!==null) arr[editingIndex]=payload; else arr.unshift(payload);
         writeAbs(arr);
         resetFormAbs();
         renderList();
@@ -1712,7 +1588,6 @@
       renderList();
     }
 
-    /* ===== Boot ===== */
     loadRemote();
     renderTopic();
     renderSubsInSidebar();
